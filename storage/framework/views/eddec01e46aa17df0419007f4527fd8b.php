@@ -1,0 +1,2 @@
+<link rel="stylesheet" href="<?php echo e(asset('frontend/plugins/leaflet/autocomplete.min.css')); ?>">
+<?php /**PATH /Volumes/OFFICIAL/DEVSFLOCK/Proskill Job/localproskill/resources/views/components/map/leaflet/autocomplete_links.blade.php ENDPATH**/ ?>
