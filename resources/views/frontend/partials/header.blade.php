@@ -27,7 +27,330 @@ config('templatecookie.default_language'))->first();
             }
         }
     </script>
+
     <div class="n-header">
+        
+        <!-- End Header top -->
+         <!-- Top Notice Bar (Bootstrap 5.0.2) -->
+        <nav class="topbar-notice d-none d-md-block" role="region" aria-label="Site notice">
+            <div class="container-xxl">
+                <div class="row align-items-center g-2 text-center text-sm-start">
+
+                    <!-- Left -->
+                    <div class="col-12 col-sm-4 order-2 order-sm-1">
+                        <a class="link-dark fw-bold d-inline-flex align-items-center" 
+                            data-bs-toggle="offcanvas" 
+                            href="#careerResourcesPanel" 
+                            role="button"
+                            aria-controls="careerResourcesPanel">
+                        <span class="me-2">Career Resources</span>
+                        <span class="fs-4 lh-1">&rsaquo;</span>
+                        </a>
+                    </div>
+
+                    <!-- Center -->
+                    <div class="col-12 col-sm-4 order-1 order-sm-2">
+                        <!-- <div class="fw-bolder notice-text">Download our app for ease.</div> -->
+                    </div>
+
+                    <!-- Right -->
+                    <div class="col-12 col-sm-4 order-3 order-sm-3 text-sm-end">
+                        <a class="link-dark fw-bold d-inline-flex align-items-center" href="#quickLinksPanel"
+                            data-bs-toggle="offcanvas"
+                            role="button"
+                            aria-controls="quickLinksPanel">
+                        <span class="me-2">Quick Links</span>
+                        <span class="fs-4 lh-1">&rsaquo;</span>
+                        </a>
+                    </div>
+                    <!-- Offcanvas: Quick Links -->
+                    <div class="offcanvas offcanvas-end quicklinks" tabindex="-1" id="quickLinksPanel"
+                        aria-labelledby="quickLinksTitle">
+                        <div class="offcanvas-header border-bottom border-slate-700">
+                            <h5 class="offcanvas-title m-0" id="quickLinksTitle">QUICK LINKS</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                        </div>
+                        <div class="offcanvas-body">
+                            <ol class="quicklinks-list">
+                            <li><a href="/career-guide">Employer List(2)</a></li>
+                            <li><a href="/resume-builder">New Jobs (1)</a></li>
+                            <li><a href="/interview-tips">Deadline Tomorrow (1)</a></li>
+                            <li><a href="/skill-training">Part Time Job (1)</a></li>
+                            <li><a href="/scholarship">Overseas Jobs</a></li>
+                            <li><a href="/blog">Fresher Jobs (2)</a></li>
+                            </ol>
+                        </div>
+                        
+                    </div>
+                    <!-- Offcanvas: Career Resources (LEFT) -->
+                    <div class="offcanvas offcanvas-start career-resources" tabindex="-1" id="careerResourcesPanel"
+                        aria-labelledby="careerResourcesTitle">
+                        <div class="offcanvas-header border-bottom">
+                            <h5 class="offcanvas-title m-0" id="careerResourcesTitle">CAREER RESOURCES</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                        </div>
+
+                        <div class="offcanvas-body">
+                            <ol class="quicklinks-list">
+                            <li><a href="/career-advice">Career Advice</a></li>
+                            <li><a href="/interview-tips">Interview Tips</a></li>
+                            <li><a href="/resume-writing-tips">Resume Writing Tips</a></li>
+                            <li><a href="/cover-letter">Cover Letter</a></li>
+                            <li><a href="/education-guide">Education Guide</a></li>
+                            <li><a href="/blog">Blog</a></li>
+                            </ol>
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+        </nav>
+        <div class="n-header--bottom">
+            <div class="container position-relative">
+                <div class="d-flex flex-wrap  tw-gap-2 tw-items-center">
+                    <div class="n-header--bottom__left d-flex align-items-center">
+                        <a href="{{ route('website.home') }}" class="brand-logo">
+                            <img src="{{ $setting->dark_logo_url }}" alt="logo">
+                        </a>
+
+                        @php
+                        $form_action = route('website.job');
+                        if (session('header_search_role') == 'candidate') {
+                        $form_action = route('website.candidate');
+                        } elseif (session('header_search_role') == 'company') {
+                        $form_action = route('website.company');
+                        }
+                        @endphp
+
+                        <form action="{{ $form_action }}" method="GET" id="search-form"
+                            class="mx-width-300 header-search-form d-lg-block d-none">
+                            <div class="search-box">
+                                <select id="headerSearchs" onclick="changeSearchSelections()" class="form-select"
+                                    aria-label="Default select example">
+                                    <option @selected(session('header_search_role')=='job' ) value="job">{{ __('jobs')
+                                        }}</option>
+                                    @guest
+                                    <option @selected(session('header_search_role')=='candidate' ) value="candidate">{{
+                                        __('candidate') }}
+                                    </option>
+                                    <option @selected(session('header_search_role')=='company' ) value="company">{{
+                                        __('company') }}</option>
+                                    @endguest
+                                    @auth('user')
+                                    <option @selected(session('header_search_role')=='candidate' ) value="candidate">{{
+                                        __('candidate') }}
+                                    </option>
+                                    @endauth
+                                    @if(auth('user')->check() && authUser()->role == 'company')
+                                    <option @selected(session('header_search_role')=='company' ) value="company">{{
+                                        __('company') }}</option>
+                                    @endif
+                                </select>
+                                <div class="d-flex flex-column flex-md-row align-items-center tw-ps-3">
+
+                                    <input name="keyword" class="search-input" type="text"
+                                        placeholder="{{ __('job_title_keyword') }}" value="{{ request('keyword') }}"
+                                        id="global_search">
+                                    <svg class="searcbox-searchicon" id="searcbox-searchicon" width="24" height="24" viewBox="0 0 24 24"
+                                        fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                            d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z"
+                                            stroke="#0A65CC" stroke-width="1.5" stroke-linecap="round"
+                                            stroke-linejoin="round" />
+                                        <path d="M21 20.9999L16.65 16.6499" stroke="#0A65CC" stroke-width="1.5"
+                                            stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                </div>
+
+                                <span id="autocomplete_job_results"></span>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="n-header--bottom__right">
+                        <div class="d-flex align-items-center ">
+                            <div class="search-icon tw-ml-2 d-lg-none !tw-cursor-pointer">
+                                <span>
+                                    <svg id="searchIcon" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                            d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z"
+                                            stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"
+                                            stroke-linejoin="round" />
+                                        <path d="M20.9999 21L16.6499 16.65" stroke="#FFFFFF" stroke-width="1.5"
+                                            stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                </span>
+                            </div>
+                            <div class="togglesearch">
+                                <form action="{{ route('website.job') }}" method="GET" id="search-form"
+                                    class="shadow px-md-5 py-md-3 p-3 !tw-bg-white rounded w-sm-75 w-100">
+
+                                    <div class="search-box form-item position-relative">
+                                        <svg class="" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z"
+                                                stroke="#0A65CC" stroke-width="1.5" stroke-linecap="round"
+                                                stroke-linejoin="round" />
+                                            <path d="M21 20.9999L16.65 16.6499" stroke="#0A65CC" stroke-width="1.5"
+                                                stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                        <input name="keyword" class="search-input w-100" type="text"
+                                            placeholder="{{ __('job_title_keyword') }}" value="{{ request('keyword') }}"
+                                            id="search_input">
+
+                                    </div>
+                                </form>
+                            </div>
+                            @auth('user')
+                            <ul class="list-unstyled tw-gap-6 tw-flex tw-items-center tw-justify-between">
+
+                                @if (auth()->user()->role == 'company')
+                                <x-website.company.notifications-component />
+                                @endif
+                                @if (auth()->user()->role == 'candidate')
+                                <x-website.candidate.notifications-component />
+                                @endif
+
+                                <x-website.company.message-component />
+
+                                <div class="dropdown dropstart">
+                                    <a href="javascript:void(0)" class="candidate-profile position-relative"
+                                        id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+                                        @company
+                                        <img src="{{ auth()->user()->company->logo_url }}" alt="logo">
+                                        @else
+                                        <img src="{{ auth()->user()->candidate->photo }}" alt="photo">
+                                        @if (auth()->user()->candidate->status == 'available')
+                                        <span class="available-alert-header">
+                                            <svg class="circle" width="14" height="14" viewBox="0 0 14 14" fill="none"
+                                                xmlns="http://www.w3.org/2000/svg">
+                                                <circle cx="7" cy="7" r="6" fill="#2ecc71" stroke="white"
+                                                    stroke-width="2">
+                                                </circle>
+                                            </svg>
+                                        </span>
+                                        @endif
+                                        @endcompany
+                                    </a>
+                                    @candidate
+                                    <ul class="custom-border dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                                        <li>
+                                            <a class="dropdown-item {{ request()->routeIs('candidate.dashboard') ? 'active' : '' }}"
+                                                href="{{ route('candidate.dashboard') }}">
+                                                <i class="ph-stack"></i>
+                                                {{ __('dashboard') }}
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item {{ request()->routeIs('candidate.setting') ? 'active' : '' }}"
+                                                href="{{ route('candidate.setting') }}">
+                                                <i class="ph-gear"></i>
+                                                {{ __('settings') }}
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="{{ route('logout') }}"
+                                                onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                                <i class="ph-sign-out"></i>
+                                                {{ __('log_out') }}
+                                            </a>
+                                            <form id="logout-form" action="{{ route('logout') }}" method="POST"
+                                                class="d-none">
+                                                @csrf
+                                            </form>
+                                        </li>
+                                    </ul>
+                                    @else
+                                    <ul class="dropdown-menu custom-border" aria-labelledby="dropdownMenuButton1">
+                                        <li>
+                                            <a class="dropdown-item {{ request()->routeIs('company.dashboard') ? 'active' : '' }}"
+                                                href="{{ route('company.dashboard') }}">
+                                                <i class="ph-stack"></i>
+                                                {{ __('dashboard') }}
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item {{ request()->routeIs('company.myjob') ? 'active' : '' }}"
+                                                href="{{ route('company.myjob') }}">
+                                                <i class="ph-suitcase-simple"></i>
+                                                {{ __('my_jobs') }}
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item {{ request()->routeIs('company.plan') ? 'active' : '' }}"
+                                                href="{{ route('company.plan') }}">
+                                                <i class="ph-notebook"></i>
+                                                {{ __('plans_billing') }}
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item {{ request()->routeIs('company.setting') ? 'active' : '' }}"
+                                                href="{{ route('company.setting') }}">
+                                                <i class="ph-gear"></i>
+                                                {{ __('settings') }}
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="{{ route('logout') }}"
+                                                onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                                <i class="ph-sign-out"></i>
+                                                {{ __('log_out') }}
+                                            </a>
+                                            <form id="logout-form" action="{{ route('logout') }}" method="POST"
+                                                class="d-none">
+                                                @csrf
+                                            </form>
+                                        </li>
+                                    </ul>
+                                    @endcandidate
+                                </div>
+                                @if (!request()->is('email/verify') && !request()->is('verification/notice'))
+                                @company
+                                <li class="tw-hidden sm:tw-block">
+
+                                    <a href="{{ route('company.job.create') }}">
+                                        <button class="btn btn-light">
+                                            {{ __('post_job') }}
+                                        </button>
+                                    </a>
+                                </li>
+                                @endcompany
+                                @endif
+                                @if (request()->is('email/verify') || request()->is('verification/notice'))
+                                <li>
+                                    <a href="{{ route('logout') }}"
+                                        onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                        <button class="btn btn-primary">
+                                            {{ __('log_out') }}
+                                        </button>
+                                    </a>
+                                </li>
+                                <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                                    @csrf
+                                </form>
+                                @endif
+                            </ul>
+                            @endauth
+                            @guest
+                            <ul class="list-unstyled tw-flex tw-flex-wrap tw-gap-3 tw-items-center tw-justify-between">
+                                <li>
+                                    <a href="{{ route('login') }}" class="btn btn-outline-light">{{ __('job_seekers') }}</a>
+                                </li>
+                                <li class="d-none d-sm-block">
+                                    <a href="{{ route('company.job.create') }}" class="btn btn-light">{{ __('employers')
+                                        }}
+                                    </a>
+                                </li>
+                            </ul>
+                            @endguest
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="n-header--top relative">
             @auth('user')
             @if (!authUser()->status)
@@ -515,251 +838,6 @@ config('templatecookie.default_language'))->first();
                             <button class="effect1">
                                 <span></span>
                             </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- End Header top -->
-        <div class="n-header--bottom">
-            <div class="container position-relative">
-                <div class="d-flex flex-wrap  tw-gap-2 tw-items-center">
-                    <div class="n-header--bottom__left d-flex align-items-center">
-                        <a href="{{ route('website.home') }}" class="brand-logo">
-                            <img src="{{ $setting->dark_logo_url }}" alt="logo">
-                        </a>
-
-                        @php
-                        $form_action = route('website.job');
-                        if (session('header_search_role') == 'candidate') {
-                        $form_action = route('website.candidate');
-                        } elseif (session('header_search_role') == 'company') {
-                        $form_action = route('website.company');
-                        }
-                        @endphp
-
-                        <form action="{{ $form_action }}" method="GET" id="search-form"
-                            class="mx-width-300 header-search-form d-lg-block d-none">
-                            <div class="search-box">
-                                <select id="headerSearchs" onclick="changeSearchSelections()" class="form-select"
-                                    aria-label="Default select example">
-                                    <option @selected(session('header_search_role')=='job' ) value="job">{{ __('jobs')
-                                        }}</option>
-                                    @guest
-                                    <option @selected(session('header_search_role')=='candidate' ) value="candidate">{{
-                                        __('candidate') }}
-                                    </option>
-                                    <option @selected(session('header_search_role')=='company' ) value="company">{{
-                                        __('company') }}</option>
-                                    @endguest
-                                    @auth('user')
-                                    <option @selected(session('header_search_role')=='candidate' ) value="candidate">{{
-                                        __('candidate') }}
-                                    </option>
-                                    @endauth
-                                    @if(auth('user')->check() && authUser()->role == 'company')
-                                    <option @selected(session('header_search_role')=='company' ) value="company">{{
-                                        __('company') }}</option>
-                                    @endif
-                                </select>
-                                <div class="d-flex flex-column flex-md-row align-items-center tw-ps-3">
-                                    <svg class="searcbox-searchicon" width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path
-                                            d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z"
-                                            stroke="#0A65CC" stroke-width="1.5" stroke-linecap="round"
-                                            stroke-linejoin="round" />
-                                        <path d="M21 20.9999L16.65 16.6499" stroke="#0A65CC" stroke-width="1.5"
-                                            stroke-linecap="round" stroke-linejoin="round" />
-                                    </svg>
-                                    <input name="keyword" class="search-input" type="text"
-                                        placeholder="{{ __('job_title_keyword') }}" value="{{ request('keyword') }}"
-                                        id="global_search">
-                                </div>
-
-                                <span id="autocomplete_job_results"></span>
-                            </div>
-                        </form>
-                    </div>
-
-                    <div class="n-header--bottom__right">
-                        <div class="d-flex align-items-center ">
-                            <div class="search-icon tw-ml-2 d-lg-none !tw-cursor-pointer">
-                                <span>
-                                    <svg id="searchIcon" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                        xmlns="http://www.w3.org/2000/svg">
-                                        <path
-                                            d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z"
-                                            stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"
-                                            stroke-linejoin="round" />
-                                        <path d="M20.9999 21L16.6499 16.65" stroke="#FFFFFF" stroke-width="1.5"
-                                            stroke-linecap="round" stroke-linejoin="round" />
-                                    </svg>
-                                </span>
-                            </div>
-                            <div class="togglesearch">
-                                <form action="{{ route('website.job') }}" method="GET" id="search-form"
-                                    class="shadow px-md-5 py-md-3 p-3 !tw-bg-white rounded w-sm-75 w-100">
-
-                                    <div class="search-box form-item position-relative">
-                                        <svg class="" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                            xmlns="http://www.w3.org/2000/svg">
-                                            <path
-                                                d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z"
-                                                stroke="#0A65CC" stroke-width="1.5" stroke-linecap="round"
-                                                stroke-linejoin="round" />
-                                            <path d="M21 20.9999L16.65 16.6499" stroke="#0A65CC" stroke-width="1.5"
-                                                stroke-linecap="round" stroke-linejoin="round" />
-                                        </svg>
-                                        <input name="keyword" class="search-input w-100" type="text"
-                                            placeholder="{{ __('job_title_keyword') }}" value="{{ request('keyword') }}"
-                                            id="search_input">
-
-                                    </div>
-                                </form>
-                            </div>
-                            @auth('user')
-                            <ul class="list-unstyled tw-gap-6 tw-flex tw-items-center tw-justify-between">
-
-                                @if (auth()->user()->role == 'company')
-                                <x-website.company.notifications-component />
-                                @endif
-                                @if (auth()->user()->role == 'candidate')
-                                <x-website.candidate.notifications-component />
-                                @endif
-
-                                <x-website.company.message-component />
-
-                                <div class="dropdown dropstart">
-                                    <a href="javascript:void(0)" class="candidate-profile position-relative"
-                                        id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
-                                        @company
-                                        <img src="{{ auth()->user()->company->logo_url }}" alt="logo">
-                                        @else
-                                        <img src="{{ auth()->user()->candidate->photo }}" alt="photo">
-                                        @if (auth()->user()->candidate->status == 'available')
-                                        <span class="available-alert-header">
-                                            <svg class="circle" width="14" height="14" viewBox="0 0 14 14" fill="none"
-                                                xmlns="http://www.w3.org/2000/svg">
-                                                <circle cx="7" cy="7" r="6" fill="#2ecc71" stroke="white"
-                                                    stroke-width="2">
-                                                </circle>
-                                            </svg>
-                                        </span>
-                                        @endif
-                                        @endcompany
-                                    </a>
-                                    @candidate
-                                    <ul class="custom-border dropdown-menu" aria-labelledby="dropdownMenuButton1">
-                                        <li>
-                                            <a class="dropdown-item {{ request()->routeIs('candidate.dashboard') ? 'active' : '' }}"
-                                                href="{{ route('candidate.dashboard') }}">
-                                                <i class="ph-stack"></i>
-                                                {{ __('dashboard') }}
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a class="dropdown-item {{ request()->routeIs('candidate.setting') ? 'active' : '' }}"
-                                                href="{{ route('candidate.setting') }}">
-                                                <i class="ph-gear"></i>
-                                                {{ __('settings') }}
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a class="dropdown-item" href="{{ route('logout') }}"
-                                                onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                                <i class="ph-sign-out"></i>
-                                                {{ __('log_out') }}
-                                            </a>
-                                            <form id="logout-form" action="{{ route('logout') }}" method="POST"
-                                                class="d-none">
-                                                @csrf
-                                            </form>
-                                        </li>
-                                    </ul>
-                                    @else
-                                    <ul class="dropdown-menu custom-border" aria-labelledby="dropdownMenuButton1">
-                                        <li>
-                                            <a class="dropdown-item {{ request()->routeIs('company.dashboard') ? 'active' : '' }}"
-                                                href="{{ route('company.dashboard') }}">
-                                                <i class="ph-stack"></i>
-                                                {{ __('dashboard') }}
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a class="dropdown-item {{ request()->routeIs('company.myjob') ? 'active' : '' }}"
-                                                href="{{ route('company.myjob') }}">
-                                                <i class="ph-suitcase-simple"></i>
-                                                {{ __('my_jobs') }}
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a class="dropdown-item {{ request()->routeIs('company.plan') ? 'active' : '' }}"
-                                                href="{{ route('company.plan') }}">
-                                                <i class="ph-notebook"></i>
-                                                {{ __('plans_billing') }}
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a class="dropdown-item {{ request()->routeIs('company.setting') ? 'active' : '' }}"
-                                                href="{{ route('company.setting') }}">
-                                                <i class="ph-gear"></i>
-                                                {{ __('settings') }}
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a class="dropdown-item" href="{{ route('logout') }}"
-                                                onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                                <i class="ph-sign-out"></i>
-                                                {{ __('log_out') }}
-                                            </a>
-                                            <form id="logout-form" action="{{ route('logout') }}" method="POST"
-                                                class="d-none">
-                                                @csrf
-                                            </form>
-                                        </li>
-                                    </ul>
-                                    @endcandidate
-                                </div>
-                                @if (!request()->is('email/verify') && !request()->is('verification/notice'))
-                                @company
-                                <li class="tw-hidden sm:tw-block">
-
-                                    <a href="{{ route('company.job.create') }}">
-                                        <button class="btn btn-light">
-                                            {{ __('post_job') }}
-                                        </button>
-                                    </a>
-                                </li>
-                                @endcompany
-                                @endif
-                                @if (request()->is('email/verify') || request()->is('verification/notice'))
-                                <li>
-                                    <a href="{{ route('logout') }}"
-                                        onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                        <button class="btn btn-primary">
-                                            {{ __('log_out') }}
-                                        </button>
-                                    </a>
-                                </li>
-                                <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                                    @csrf
-                                </form>
-                                @endif
-                            </ul>
-                            @endauth
-                            @guest
-                            <ul class="list-unstyled tw-flex tw-flex-wrap tw-gap-3 tw-items-center tw-justify-between">
-                                <li>
-                                    <a href="{{ route('login') }}" class="btn btn-outline-light">{{ __('sign_in') }}</a>
-                                </li>
-                                <li class="d-none d-sm-block">
-                                    <a href="{{ route('company.job.create') }}" class="btn btn-light">{{ __('post_job')
-                                        }}
-                                    </a>
-                                </li>
-                            </ul>
-                            @endguest
                         </div>
                     </div>
                 </div>

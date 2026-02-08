@@ -15,5 +15,5 @@
     "MobileApp": true,
     "Map": true,
     "ThemeSwitcherWidget": true,
-    "CandidatePlan": false
+    "CandidatePlan": true
 }
