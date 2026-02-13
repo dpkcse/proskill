@@ -2,18 +2,21 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class CandidateEducation extends Model
 {
-    use HasFactory;
+    protected $table = 'candidate_education';
 
-    protected $fillable = [
-        'candidate_id',
-        'level',
-        'degree',
-        'year',
-        'notes',
-    ];
+    protected $guarded = [];
+
+    public function skills()
+    {
+        return $this->belongsToMany(
+            \App\Models\Skill::class,
+            'candidate_education_skill',
+            'candidate_education_id',
+            'skill_id'
+        );
+    }
 }

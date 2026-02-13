@@ -11,10 +11,12 @@ use App\Models\Candidate;
 use App\Models\CandidateLanguage;
 use App\Models\CandidateResume;
 use App\Models\Company;
+use App\Models\SearchCountry;
 use App\Models\ContactInfo;
 use App\Models\Education;
 use App\Models\Experience;
 use App\Models\JobRole;
+use App\Models\JobCategory;
 use App\Models\Profession;
 use App\Models\Skill;
 use App\Services\Website\Candidate\CandidateSettingUpdateService;
@@ -218,6 +220,8 @@ class CandidateController extends Controller
 
             // for social link
             $socials = auth()->user()->socialInfo;
+            // for extracurricular link
+            $extracurriculars = auth()->user()->extracurricularInfo;
 
             // for candidate resume/cv
             $resumes = $candidate->resumes;
@@ -227,20 +231,26 @@ class CandidateController extends Controller
             $educations = Education::all();
             $professions = Profession::all()->sortBy('name');
             $skills = Skill::all()->sortBy('name');
+            $job_categories = JobCategory::all()->sortBy('name');
             $languages = CandidateLanguage::all(['id', 'name']);
-            $candidate->load('skills', 'languages', 'experiences', 'educations', 'jobRoleAlerts:id,candidate_id,job_role_id');
+            // দেশগুলো নাম অনুযায়ী alphabetical order এ
+            $countries = SearchCountry::orderBy('name', 'asc')->get();
+            $candidate->load('skills', 'languages', 'experiences', 'educations', 'experienceSkills.category', 'experienceSkills.skill', 'jobRoleAlerts:id,candidate_id,job_role_id');
 
             return view('frontend.pages.candidate.setting', [
                 'candidate' => $candidate->load('skills', 'languages'),
                 'contact' => $contact,
                 'socials' => $socials,
+                'extracurriculars' => $extracurriculars,
                 'job_roles' => $job_roles,
                 'experiences' => $experiences,
                 'educations' => $educations,
                 'professions' => $professions,
                 'resumes' => $resumes,
                 'skills' => $skills,
+                'job_categories' => $job_categories,
                 'candidate_languages' => $languages,
+                'countries'=>$countries 
             ]);
         } catch (\Exception $e) {
             flashError('An error occurred: '.$e->getMessage());

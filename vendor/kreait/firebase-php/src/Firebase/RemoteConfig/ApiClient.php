@@ -18,14 +18,14 @@ use function array_filter;
  */
 class ApiClient
 {
-    private readonly RemoteConfigApiExceptionConverter $errorHandler;
-
     private readonly string $baseUri;
 
-    public function __construct(string $projectId, private readonly ClientInterface $client)
-    {
+    public function __construct(
+        string $projectId,
+        private readonly ClientInterface $client,
+        private readonly RemoteConfigApiExceptionConverter $errorHandler,
+    ) {
         $this->baseUri = "https://firebaseremoteconfig.googleapis.com/v1/projects/{$projectId}/remoteConfig";
-        $this->errorHandler = new RemoteConfigApiExceptionConverter();
     }
 
     /**
@@ -103,7 +103,7 @@ class ApiClient
                 'endVersionNumber' => $lastVersionNumber,
                 'pageSize' => $pageSize,
                 'pageToken' => $nextPageToken,
-            ], fn($value): bool => $value !== null),
+            ], fn(?string $value): bool => $value !== null),
         ]);
     }
 

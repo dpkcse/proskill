@@ -9,6 +9,7 @@ use Sentry\HttpClient\HttpClientInterface;
 use Sentry\Integration\IntegrationInterface;
 use Sentry\Logs\Logs;
 use Sentry\Metrics\Metrics;
+use Sentry\Metrics\TraceMetrics;
 use Sentry\State\Scope;
 use Sentry\Tracing\PropagationContext;
 use Sentry\Tracing\SpanContext;
@@ -29,7 +30,7 @@ use Sentry\Tracing\TransactionContext;
  *     capture_silenced_errors?: bool,
  *     context_lines?: int|null,
  *     default_integrations?: bool,
- *     dsn?: string|bool|null|Dsn,
+ *     dsn?: string|bool|Dsn|null,
  *     enable_logs?: bool,
  *     environment?: string|null,
  *     error_types?: int|null,
@@ -373,9 +374,25 @@ function logger(): Logs
 }
 
 /**
- * @deprecated Metrics are no longer supported. Metrics API is a no-op and will be removed in 5.x.
+ * @deprecated use `trace_metrics` instead
  */
 function metrics(): Metrics
 {
     return Metrics::getInstance();
+}
+
+function trace_metrics(): TraceMetrics
+{
+    return TraceMetrics::getInstance();
+}
+
+/**
+ * Adds a feature flag evaluation to the current scope.
+ * When invoked repeatedly for the same name, the most recent value is used.
+ */
+function addFeatureFlag(string $name, bool $result): void
+{
+    SentrySdk::getCurrentHub()->configureScope(function (Scope $scope) use ($name, $result) {
+        $scope->addFeatureFlag($name, $result);
+    });
 }
