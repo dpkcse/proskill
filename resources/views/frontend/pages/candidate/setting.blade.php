@@ -1366,7 +1366,7 @@
         aria-hidden="true" data-bs-keyboard="false">
         <div class="modal-dialog">
             <div class="modal-content">
-                <form action="{{ route('candidate.educations.store') }}" method="POST">
+                <form action="{{ route('candidate.educations.store') }}" style="padding:20px" method="POST">
                 @csrf
 
                 <div class="row">
@@ -1389,7 +1389,6 @@
                         <x-forms.label name="degree_name" class="rt-mb-8" />
                         <select name="degree_name" class="select2-taggable w-100-p">
                             <option value="">{{ __('select_one') }}</option>
-                            {{-- আপনি চাইলে DB থেকে “degrees” এনে এখানে loop করবেন --}}
                             <option>Master of Science (MSc)</option>
                             <option>Master of Business Administration (MBA)</option>
                             <option>...</option>
