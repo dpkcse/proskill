@@ -9,18 +9,20 @@
     <table class="tw-px-2">
         <thead>
             <tr>
-                <th class="!tw-text-base !tw-font-medium">{{ __('education_level') }}</th>
-                <th class="!tw-text-base !tw-font-medium">{{ __('degree') }}</th>
-                <th class="!tw-text-base !tw-font-medium">{{ __('year') }}</th>
+                <th class="!tw-text-base !tw-font-medium">{{ __('exam_name') }}</th>
+                <th class="!tw-text-base !tw-font-medium">{{ __('degree_name') }}</th>
+                <th class="!tw-text-base !tw-font-medium">{{ __('passing_year') }}</th>
                 <th class="!tw-text-base !tw-font-medium tw-text-right">{{ __('action') }}</th>
             </tr>
         </thead>
+
         <tbody>
             @forelse ($educations as $education)
                 <tr>
-                    <td>{{ $education->level }}</td>
-                    <td>{{ $education->degree }}</td>
-                    <td>{{ $education->year }}</td>
+                    <td>{{ $education->exam_name ?? $education->level }}</td>
+                    <td>{{ $education->degree_name ?? $education->degree }}</td>
+                    <td>{{ $education->passing_year ?? $education->year }}</td>
+
                     <td>
                         <div class="d-flex justify-content-end">
                             <button type="button" class="btn btn-icon" id="dropdownMenuButton5"
@@ -42,7 +44,18 @@
                                 aria-labelledby="dropdownMenuButton5">
                                 <li>
                                     <a href="javascript:void(0)" class="dropdown-item"
-                                        onclick="educationDetail({{ json_encode($education) }})">
+                                        onclick="educationDetail({{ json_encode([
+                                                                    'id' => $education->id,
+                                                                    'is_institute_accredited' => $education->is_institute_accredited,
+                                                                    'exam_name' => $education->exam_name,
+                                                                    'degree_name' => $education->degree_name,
+                                                                    'major_subject' => $education->major_subject,
+                                                                    'education_institution_id' => $education->education_institution_id,
+                                                                    'passing_year' => $education->passing_year,
+                                                                    'result' => $education->result,
+                                                                    'board' => $education->board,
+                                                                    'skill_ids' => $education->skills->pluck('id')->values(),
+                                                                ]) }})">
                                         <x-svg.edit-icon />
                                         {{ __('edit') }}
                                     </a>
@@ -84,42 +97,107 @@
             max-width: 950px !important;
             padding: 20px;
         }
+        .select2-container--open,
+        .select2-dropdown {
+             z-index: 99999 !important;
+        }
+        .modal-body { overflow: visible !important; }
+
     </style>
 @endpush
 
 @push('frontend_scripts')
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            $('#addEducation').on('click', function () {
-                $('#addEducationModal').modal('show');
-            });
+<script>
+  function initSelect2InModal(modalId) {
+    const $modal = $(modalId);
+    const $selects = $modal.find('.select2-taggable');
 
-            $('.year_picker').datepicker({
-                format: 'yyyy',
-                viewMode: "years",
-                minViewMode: "years",
-                autoclose: true
-            });
+    $selects.each(function () {
+      // Already initialized হলে destroy করে নতুন করে init
+      if ($(this).hasClass('select2-hidden-accessible')) {
+        $(this).select2('destroy');
+      }
+    });
 
-            function closeAddEducationModal() {
-                $('#addEducationModal').find('form')[0].reset();
-                $('#addEducationModal').modal('hide')
-            }
+    $selects.select2({
+      dropdownParent: $modal,
+      width: '100%'
+    });
+  }
 
-            function closeEditEducationModal() {
-                $('#editEducationModal').find('form')[0].reset();
-                $('#editEducationModal').modal('hide')
-            }
+  // Global functions
+  window.closeAddEducationModal = function () {
+    const $m = $('#addEducationModal');
+    const form = $m.find('form')[0];
+    if (form) form.reset();
 
-            function educationDetail(education, start, end) {
-                $('#education-modal-id').val(education.id);
-                $('#education-modal-level').val(education.level);
-                $('#education-modal-degree').val(education.degree);
-                $('#education-modal-year').val(education.year);
-                $('#education-notes').val(education.notes);
+    // select2 reset (init থাকলে)
+    $m.find('select').val(null).trigger('change');
 
-                $('#editEducationModal').modal('show');
-            }
-        });
-    </script>
+    $m.modal('hide');
+  }
+
+  window.closeEditEducationModal = function () {
+    const $m = $('#editEducationModal');
+    const form = $m.find('form')[0];
+    if (form) form.reset();
+
+    $m.find('select').val(null).trigger('change');
+
+    $('#edu-accredit-yes').prop('checked', false);
+    $('#edu-accredit-no').prop('checked', false);
+
+    $m.modal('hide');
+  }
+
+  window.educationDetail = function (education) {
+    $('#education-modal-id').val(education.id);
+
+    // radio
+    $('#edu-accredit-yes').prop('checked', education.is_institute_accredited == 1);
+    $('#edu-accredit-no').prop('checked', education.is_institute_accredited == 0);
+
+    // fields
+    $('#education-modal-exam').val(education.exam_name || '').trigger('change');
+    $('#education-modal-degree-name').val(education.degree_name || '').trigger('change');
+    $('#education-modal-major').val(education.major_subject || '');
+    $('#education-modal-inst').val(education.education_institution_id || '').trigger('change');
+
+    $('#education-modal-year').val(education.passing_year || '');
+    $('#education-modal-result').val(education.result || '');
+    $('#education-modal-board').val(education.board || '');
+
+    if (education.skill_ids) {
+      $('#education-modal-skills').val(education.skill_ids).trigger('change');
+    } else {
+      $('#education-modal-skills').val(null).trigger('change');
+    }
+
+    $('#editEducationModal').modal('show');
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    $('#addEducation').on('click', function () {
+      $('#addEducationModal').modal('show');
+    });
+
+    // year picker
+    $('.year_picker').datepicker({
+      format: 'yyyy',
+      viewMode: "years",
+      minViewMode: "years",
+      autoclose: true
+    });
+
+    // modal open হলে select2 init (BEST)
+    $('#addEducationModal').on('shown.bs.modal', function () {
+      initSelect2InModal('#addEducationModal');
+    });
+
+    $('#editEducationModal').on('shown.bs.modal', function () {
+      initSelect2InModal('#editEducationModal');
+    });
+  });
+</script>
+
 @endpush

@@ -1370,6 +1370,15 @@
                 @csrf
 
                 <div class="row">
+                    <div class="col-12 mb-3">
+                        <label class="body-font-4 d-block text-gray-900 rt-mb-8">
+                            Do you have institutional accreditation?
+                        </label>
+                        <div class="d-flex gap-3">
+                            <label><input type="radio" name="is_institute_accredited" value="1"> Yes</label>
+                            <label><input type="radio" name="is_institute_accredited" value="0"> No</label>
+                        </div>
+                    </div>
                     <div class="col-lg-6 mb-3">
                     <x-forms.label name="exam_name" class="rt-mb-8" />
                     <select name="exam_name" class="select2-taggable w-100-p" required>
@@ -1401,13 +1410,18 @@
                     </div>
 
                     <div class="col-lg-6 mb-3">
-                    <x-forms.label name="institute_name" class="rt-mb-8" />
-                        <select name="institute_name" class="select2-taggable w-100-p" required>
+                        <x-forms.label name="institute_name" class="rt-mb-8" />
+                        <select name="education_institution_id" class="select2-taggable w-100-p" required>
                             <option value="">{{ __('select_one') }}</option>
+
                             @foreach($institutions as $inst)
-                            <option value="{{ $inst->name }}">{{ $inst->name }}</option>
+                                <option value="{{ $inst->id }}"
+                                    {{ (string) old('education_institution_id') === (string) $inst->id ? 'selected' : '' }}>
+                                    {{ $inst->name }}
+                                </option>
                             @endforeach
                         </select>
+
                     </div>
 
                     <div class="col-lg-4 mb-3">
@@ -1426,24 +1440,18 @@
                     </div>
 
                     <div class="col-12 mb-3">
-                    <x-forms.label name="skills" class="rt-mb-8" />
-                    <select name="skills[]" class="select2-taggable w-100-p" multiple>
-                        @foreach($skills as $skill)
-                        <option value="{{ $skill->id }}">{{ $skill->name }}</option>
-                        @endforeach
-                    </select>
-                    </div>
+                        <x-forms.label name="skills" class="rt-mb-8" />
 
-                    <div class="col-12 mb-3">
-                    <label class="body-font-4 d-block text-gray-900 rt-mb-8">
-                        Do you have institutional accreditation?
-                    </label>
-                    <div class="d-flex gap-3">
-                        <label><input type="radio" name="is_institute_accredited" value="1"> Yes</label>
-                        <label><input type="radio" name="is_institute_accredited" value="0"> No</label>
-                    </div>
-                    </div>
+                        <select name="skills[]" class="select2-taggable w-100-p" multiple>
+                            @foreach($skills as $skill)
+                                <option value="{{ $skill->id }}"
+                                    {{ in_array($skill->id, old('skills', [])) ? 'selected' : '' }}>
+                                    {{ $skill->name }}
+                                </option>
+                            @endforeach
+                        </select>
 
+                    </div>
                 </div>
 
                 <button class="btn btn-primary">{{ __('add_education') }}</button>
@@ -1463,60 +1471,118 @@
     </div>
 
 
-    {{-- Edit Eduction Modal --}}
+    {{-- Edit Education Modal (NEW) --}}
     <div class="modal fade" id="editEducationModal" tabindex="-1" aria-labelledby="exampleModalLabel"
         aria-hidden="true" data-bs-keyboard="false">
         <div class="modal-dialog">
             <div class="modal-content">
-                <form action="{{ route('candidate.educations.update') }}" method="POST">
+                <form action="{{ route('candidate.educations.update') }}" style="padding:20px" method="POST">
                     @csrf
                     @method('PUT')
-                    <div class="modal-body">
-                        <h5 class="modal-title rt-mb-18 f-size-18" id="cvModalLabel">{{ __('edit_education') }}</h5>
-                        <input type="hidden" name="education_id" id="education-modal-id">
-                        <div class="from-group rt-mb-18">
-                            <x-forms.label name="education_level" class="rt-mb-8" />
-                            <input id="education-modal-level" type="text" name="level" required
-                                placeholder="{{ __('enter') }} {{ __('education_level') }}">
-                        </div>
-                        <div class="row rt-mb-18">
-                            <div class="col-lg-6">
-                                <x-forms.label name="degree" class="rt-mb-8" />
-                                <input id="education-modal-degree" type="text" name="degree" required
-                                    placeholder="{{ __('enter') }} {{ __('degree') }}">
-                                @error('degree')
-                                    <span class="error invalid-feedback">{{ $message }}</span>
-                                @enderror
-                            </div>
-                            <div class="col-lg-6">
-                                <x-forms.label name="year" class="rt-mb-8" />
-                                <input id="education-modal-year" type="text" name="year"
-                                    value="{{ old('year') }}" placeholder="{{ __('dd-mm-yyyy') }}"
-                                    class="year_picker form-control border-cutom @error('year') is-invalid @enderror"
-                                    required>
+
+                    <input type="hidden" name="education_id" id="education-modal-id">
+
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <label class="body-font-4 d-block text-gray-900 rt-mb-8">
+                                Do you have institutional accreditation?
+                            </label>
+                            <div class="d-flex gap-3">
+                                <label>
+                                    <input type="radio" name="is_institute_accredited" id="edu-accredit-yes" value="1">
+                                    Yes
+                                </label>
+                                <label>
+                                    <input type="radio" name="is_institute_accredited" id="edu-accredit-no" value="0">
+                                    No
+                                </label>
                             </div>
                         </div>
-                        <div class="row rt-mb-18">
-                            <div class="col-lg-12">
-                                <x-forms.label name="notes" class="rt-mb-8" :required="false" />
-                                <textarea id="education-notes" class="form-control @error('notes') is-invalid @enderror"
-                                    placeholder="{{ __('enter') }} {{ __('notes') }}" name="notes" rows="5"></textarea>
-                            </div>
+
+                        <div class="col-lg-6 mb-3">
+                            <x-forms.label name="exam_name" class="rt-mb-8" />
+                            <select name="exam_name" id="education-modal-exam" class="select2-taggable w-100-p" required>
+                                <option value="">{{ __('select_one') }}</option>
+                                <option>PSC / 5 pass</option>
+                                <option>JSC/JDC/8 pass</option>
+                                <option>Secondary</option>
+                                <option>Higher Secondary</option>
+                                <option>Diploma</option>
+                                <option>Bachelor/Honors</option>
+                                <option>Masters</option>
+                                <option>PhD (Doctor of Philosophy)</option>
+                            </select>
                         </div>
-                        <div class="d-flex tw-flex-wrap tw-gap-4 justify-content-between">
-                            <button type="button" class="bg-priamry-50 btn btn-primary-50"
-                                onclick="closeEditEducationModal()">{{ __('cancel') }}</button>
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <span class="button-content-wrapper ">
-                                    <span class="button-icon align-icon-right"><i class="ph-arrow-right"></i></span>
-                                    <span class="button-text">
-                                        {{ __('update_education') }}
-                                    </span>
-                                </span>
-                            </button>
+
+                        <div class="col-lg-6 mb-3">
+                            <x-forms.label name="degree_name" class="rt-mb-8" />
+                            <select name="degree_name" id="education-modal-degree-name" class="select2-taggable w-100-p">
+                                <option value="">{{ __('select_one') }}</option>
+                                <option>Master of Science (MSc)</option>
+                                <option>Master of Business Administration (MBA)</option>
+                                <option>...</option>
+                            </select>
+                        </div>
+
+                        <div class="col-lg-6 mb-3">
+                            <x-forms.label name="major_subject" class="rt-mb-8" />
+                            <input type="text" name="major_subject" id="education-modal-major"
+                                class="form-control"
+                                placeholder="Science / Arts / Commerce / Major">
+                        </div>
+
+                        <div class="col-lg-6 mb-3">
+                            <x-forms.label name="institute_name" class="rt-mb-8" />
+                            <select name="education_institution_id" id="education-modal-inst"
+                                    class="select2-taggable w-100-p" required>
+                                <option value="">{{ __('select_one') }}</option>
+                                @foreach($institutions as $inst)
+                                    <option value="{{ $inst->id }}">{{ $inst->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="col-lg-4 mb-3">
+                            <x-forms.label name="passing_year" class="rt-mb-8" />
+                            <input type="text" name="passing_year" id="education-modal-year"
+                                class="year_picker form-control" placeholder="2020">
+                        </div>
+
+                        <div class="col-lg-4 mb-3">
+                            <x-forms.label name="result" class="rt-mb-8" />
+                            <input type="text" name="result" id="education-modal-result"
+                                class="form-control" placeholder="GPA/CGPA/Grade">
+                        </div>
+
+                        <div class="col-lg-4 mb-3">
+                            <x-forms.label name="board" class="rt-mb-8" />
+                            <input type="text" name="board" id="education-modal-board"
+                                class="form-control" placeholder="Dhaka / Rajshahi ...">
+                        </div>
+
+                        <div class="col-12 mb-3">
+                            <x-forms.label name="skills" class="rt-mb-8" />
+                            <select name="skills[]" id="education-modal-skills"
+                                    class="select2-taggable w-100-p" multiple>
+                                @foreach($skills as $skill)
+                                    <option value="{{ $skill->id }}">{{ $skill->name }}</option>
+                                @endforeach
+                            </select>
                         </div>
                     </div>
+
+                    <div class="d-flex tw-flex-wrap tw-gap-4 justify-content-between">
+                        <button type="button" class="bg-priamry-50 btn btn-primary-50"
+                            onclick="closeEditEducationModal()">{{ __('cancel') }}</button>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <span class="button-content-wrapper ">
+                                <span class="button-icon align-icon-right"><i class="ph-arrow-right"></i></span>
+                                <span class="button-text">{{ __('update_education') }}</span>
+                            </span>
+                        </button>
+                    </div>
                 </form>
+
                 <button type="button" class="btn-close" onclick="closeEditEducationModal()">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
                         xmlns="http://www.w3.org/2000/svg">
@@ -1529,6 +1595,7 @@
             </div>
         </div>
     </div>
+
 
     {{-- Add Experience Modal --}}
     <div class="modal fade" id="addExperienceModal" tabindex="-1" aria-labelledby="exampleModalLabel"
