@@ -280,13 +280,13 @@
                                                     <x-forms.label :required="false" name="postcode"
                                                         class="body-font-4 d-block text-gray-900 rt-mb-8" />
                                                     <x-forms.input type="text" name="postcode"
-                                                        value="{{ $candidate->postcode ?? '' }}" id="postcode_basic"
+                                                        value="{{ $candidate->postcode ?? $candidate->bd_post_office ?? '' }}" id="postcode_basic"
                                                         placeholder="{{ __('postcode') }}" />
                                                 </div>
                                                 <div class="col-lg-12 mb-3">
                                                     <label class="body-font-4 d-block text-gray-900 rt-mb-8">{{ __('house_no_road_village') }}</label>
                                                     <input type="text" name="neighborhood" class="form-control"
-                                                        value="{{ $candidate->neighborhood ?? '' }}"
+                                                        value="{{ $candidate->neighborhood ?? $candidate->house_road_village ?? '' }}"
                                                         placeholder="Type House No. / Road / Village">
                                                 </div>
                                             </div>
@@ -1844,8 +1844,8 @@
             const thanaEl = document.getElementById('bd_thana_select');
             if (!districtEl || !thanaEl) return;
 
-            const currentDistrict = @json($candidate->locality ?? '');
-            const currentThana = @json($candidate->place ?? '');
+            const currentDistrict = @json($candidate->locality ?? $candidate->bd_district ?? $candidate->district ?? '');
+            const currentThana = @json($candidate->place ?? $candidate->bd_thana ?? '');
 
             let districts = [];
             let thanaByDistrict = {};

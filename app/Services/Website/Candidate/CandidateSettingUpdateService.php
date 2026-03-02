@@ -200,6 +200,9 @@ class CandidateSettingUpdateService
         if (Schema::hasColumn('candidates', 'house_road_village')) {
             $candidateData['house_road_village'] = $request->neighborhood;
         }
+        if (Schema::hasColumn('candidates', 'bd_post_office')) {
+            $candidateData['bd_post_office'] = $request->postcode;
+        }
 
         $candidate->update($candidateData);
 
