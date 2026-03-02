@@ -169,9 +169,6 @@ class CandidateSettingUpdateService
             'experience_id' => $experience->id,
             'education_id' => $education->id,
             'website' => $request->website,
-            'birth_date' => $date ?? null,    
-            'nationality'   => $request->nationality
-            ]);
             'birth_date' => $date ?? null,
             'nationality' => $request->nationality,
             'locality' => $request->bd_district_name,
