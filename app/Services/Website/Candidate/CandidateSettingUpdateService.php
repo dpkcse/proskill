@@ -16,6 +16,8 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+
+use Illuminate\Support\Facades\Schema;
 use Modules\Language\Entities\Language;
 
 class CandidateSettingUpdateService
@@ -164,19 +166,42 @@ class CandidateSettingUpdateService
             $date = $request['birth_date'] = $dateTime->format('Y-m-d H:i:s');
         }
 
-        $candidate->update([
+        $candidateData = [
             'title' => $request->title,
             'experience_id' => $experience->id,
             'education_id' => $education->id,
             'website' => $request->website,
             'birth_date' => $date ?? null,
             'nationality' => $request->nationality,
-            'locality' => $request->bd_district_name,
-            'district' => $request->bd_district_name,
-            'place' => $request->bd_thana_name,
-            'neighborhood' => $request->neighborhood,
-            'postcode' => $request->postcode,
-        ]);
+        ];
+
+        if (Schema::hasColumn('candidates', 'locality')) {
+            $candidateData['locality'] = $request->bd_district_name;
+        }
+        if (Schema::hasColumn('candidates', 'district')) {
+            $candidateData['district'] = $request->bd_district_name;
+        }
+        if (Schema::hasColumn('candidates', 'place')) {
+            $candidateData['place'] = $request->bd_thana_name;
+        }
+        if (Schema::hasColumn('candidates', 'neighborhood')) {
+            $candidateData['neighborhood'] = $request->neighborhood;
+        }
+        if (Schema::hasColumn('candidates', 'postcode')) {
+            $candidateData['postcode'] = $request->postcode;
+        }
+
+        if (Schema::hasColumn('candidates', 'bd_district')) {
+            $candidateData['bd_district'] = $request->bd_district_name;
+        }
+        if (Schema::hasColumn('candidates', 'bd_thana')) {
+            $candidateData['bd_thana'] = $request->bd_thana_name;
+        }
+        if (Schema::hasColumn('candidates', 'house_road_village')) {
+            $candidateData['house_road_village'] = $request->neighborhood;
+        }
+
+        $candidate->update($candidateData);
 
         // image
         // image (Candidate photo) - 300x300
@@ -357,15 +382,42 @@ class CandidateSettingUpdateService
         ]);
 
         // Location
-        updateMap($candidate);
-        if ($request->filled('country') || $request->filled('address') || $request->filled('exact_location') || $request->filled('lat') || $request->filled('long')) {
-            $candidate->update([
-                'country' => $request->country ?? $candidate->country,
-                'address' => $request->address ?? $candidate->address,
-                'exact_location' => $request->exact_location ?? $candidate->exact_location,
-                'lat' => $request->lat ?? $candidate->lat,
-                'long' => $request->long ?? $candidate->long,
-            ]);
+        // updateMap($candidate);
+        // if ($request->filled('country') || $request->filled('address') || $request->filled('exact_location') || $request->filled('lat') || $request->filled('long')) {
+        //     $candidate->update([
+        //         'country' => $request->country ?? $candidate->country,
+        //         'address' => $request->address ?? $candidate->address,
+        //         'exact_location' => $request->exact_location ?? $candidate->exact_location,
+        //         'lat' => $request->lat ?? $candidate->lat,
+        //         'long' => $request->long ?? $candidate->long,
+        //     ]);
+        // }
+        updateMap(auth()->user()->candidate);
+        // Location (avoid wiping address fields when no location payload exists in session)
+        $location = session('location');
+        $hasLocationPayload = is_array($location) && count(array_filter([
+            $location['country'] ?? null,
+            $location['region'] ?? null,
+            $location['district'] ?? null,
+            $location['exact_location'] ?? null,
+            $location['neighborhood'] ?? null,
+            $location['postcode'] ?? null,
+        ]));
+
+        $hasSelectedLocation = count(array_filter([
+            session('selectedCountryId'),
+            session('selectedStateId'),
+            session('selectedCityId'),
+            session('selectedCountryLat'),
+            session('selectedCountryLong'),
+            session('selectedStateLat'),
+            session('selectedStateLong'),
+            session('selectedCityLat'),
+            session('selectedCityLong'),
+        ]));
+
+        if ($hasLocationPayload || $hasSelectedLocation) {
+            updateMap(auth()->user()->candidate);
         }
 
         return true;
