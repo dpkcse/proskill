@@ -333,6 +333,7 @@ class CandidateSettingUpdateService
                 'phone' => $request->phone,
                 'secondary_phone' => $request->secondary_phone,
                 'email' => $request->email,
+                'whatsapp_number' => $request->whatsapp_number,
                 'secondary_email' => $request->secondary_email,
             ]);
         } else {
@@ -345,12 +346,21 @@ class CandidateSettingUpdateService
             ]);
         }
 
-        if (! empty($request->whatsapp_number)) {
-            $candidate->update(['whatsapp_number' => $request->whatsapp_number]);
-        }
+        $candidate->update([
+            'whatsapp_number' => $request->whatsapp_number,
+        ]);
 
         // Location
-        updateMap(auth()->user()->candidate);
+        updateMap($candidate);
+        if ($request->filled('country') || $request->filled('address') || $request->filled('exact_location') || $request->filled('lat') || $request->filled('long')) {
+            $candidate->update([
+                'country' => $request->country ?? $candidate->country,
+                'address' => $request->address ?? $candidate->address,
+                'exact_location' => $request->exact_location ?? $candidate->exact_location,
+                'lat' => $request->lat ?? $candidate->lat,
+                'long' => $request->long ?? $candidate->long,
+            ]);
+        }
 
         return true;
     }
