@@ -395,32 +395,37 @@ class CandidateSettingUpdateService
         //         'long' => $request->long ?? $candidate->long,
         //     ]);
         // }
+        // Location
         updateMap(auth()->user()->candidate);
-        // Location (avoid wiping address fields when no location payload exists in session)
-        $location = session('location');
-        $hasLocationPayload = is_array($location) && count(array_filter([
-            $location['country'] ?? null,
-            $location['region'] ?? null,
-            $location['district'] ?? null,
-            $location['exact_location'] ?? null,
-            $location['neighborhood'] ?? null,
-            $location['postcode'] ?? null,
-        ]));
+        // Location: update map data from Contact or Basic settings flow when payload exists.
+        // This keeps Basic-tab contact flow compatible without wiping address fields on empty payload.
+        if (in_array($request->type, ['contact', 'basic'], true)) {
+            $location = session('location');
+            $hasLocationPayload = is_array($location) && count(array_filter([
+                $location['region'] ?? null,
+                $location['district'] ?? null,
+                $location['exact_location'] ?? null,
+                $location['neighborhood'] ?? null,
+                $location['postcode'] ?? null,
+                $location['lat'] ?? null,
+                $location['lng'] ?? null,
+            ]));
 
-        $hasSelectedLocation = count(array_filter([
-            session('selectedCountryId'),
-            session('selectedStateId'),
-            session('selectedCityId'),
-            session('selectedCountryLat'),
-            session('selectedCountryLong'),
-            session('selectedStateLat'),
-            session('selectedStateLong'),
-            session('selectedCityLat'),
-            session('selectedCityLong'),
-        ]));
+            $hasSelectedLocation = count(array_filter([
+                session('selectedCountryId'),
+                session('selectedStateId'),
+                session('selectedCityId'),
+                session('selectedCountryLat'),
+                session('selectedCountryLong'),
+                session('selectedStateLat'),
+                session('selectedStateLong'),
+                session('selectedCityLat'),
+                session('selectedCityLong'),
+            ]));
 
-        if ($hasLocationPayload || $hasSelectedLocation) {
-            updateMap(auth()->user()->candidate);
+            if ($hasLocationPayload || $hasSelectedLocation) {
+                updateMap(auth()->user()->candidate);
+            }
         }
 
         return true;
