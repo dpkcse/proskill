@@ -35,6 +35,7 @@ class CandidateSettingUpdateService
 
         if ($request->type == 'basic') {
             $this->candidateBasicInfoUpdate($request, $user, $candidate);
+            $this->contactUpdate($request, $candidate);
             $candidate->update(['profile_complete' => $candidate->profile_complete != 0 ? $candidate->profile_complete - 20 : 0]);
             flashSuccess(__('profile_updated'));
 
@@ -171,6 +172,14 @@ class CandidateSettingUpdateService
             'birth_date' => $date ?? null,    
             'nationality'   => $request->nationality
             ]);
+            'birth_date' => $date ?? null,
+            'nationality' => $request->nationality,
+            'locality' => $request->bd_district_name,
+            'district' => $request->bd_district_name,
+            'place' => $request->bd_thana_name,
+            'neighborhood' => $request->neighborhood,
+            'postcode' => $request->postcode,
+        ]);
 
         // image
         // image (Candidate photo) - 300x300
