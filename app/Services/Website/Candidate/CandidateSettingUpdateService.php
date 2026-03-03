@@ -37,6 +37,7 @@ class CandidateSettingUpdateService
         if ($request->type == 'basic') {
             $this->candidateBasicInfoUpdate($request, $user, $candidate);
             $this->contactUpdate($request, $candidate);
+
             if ($request->filled('account_email') && $request->account_email !== $user->email) {
                 $this->emailUpdate($request);
             }
