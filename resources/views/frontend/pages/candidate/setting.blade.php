@@ -266,27 +266,37 @@
                                             <div class="row">
                                                 <div class="col-lg-4 mb-3">
                                                     <label class="body-font-4 d-block text-gray-900 rt-mb-8">{{ __('district') }}</label>
-                                                    <select id="bd_district_select" class="rt-selectactive w-100-p" name="bd_district_name">
-                                                        <option value="">{{ __('select_one') }}</option>
-                                                    </select>
+                                                        @php
+                                                            $districtValue = old('bd_district_name', $candidate->locality ?: ($candidate->bd_district ?: ($candidate->district ?: '')));
+                                                            $thanaValue = old('bd_thana_name', $candidate->bd_thana ?: ($candidate->place ?: ''));
+                                                        @endphp
+                                                        <select id="bd_district_select" class="rt-selectactive w-100-p" name="bd_district_name">
+                                                            <option value="">{{ __('select_one') }}</option>
+                                                            @if ($districtValue)
+                                                                <option value="{{ $districtValue }}" selected>{{ $districtValue }}</option>
+                                                            @endif
+                                                        </select>
                                                 </div>
                                                 <div class="col-lg-4 mb-3">
                                                     <label class="body-font-4 d-block text-gray-900 rt-mb-8">{{ __('thana_upazila') }}</label>
-                                                    <select id="bd_thana_select" class="rt-selectactive w-100-p" name="bd_thana_name" disabled>
-                                                        <option value="">{{ __('select_one') }}</option>
+                                                   <select id="bd_thana_select" class="rt-selectactive w-100-p" name="bd_thana_name" {{ $districtValue ? '' : 'disabled' }}>
+                                                           <option value="">{{ __('select_one') }}</option>
+                                                            @if ($thanaValue)
+                                                                <option value="{{ $thanaValue }}" selected>{{ $thanaValue }}</option>
+                                                            @endif
                                                     </select>
                                                 </div>
                                                 <div class="col-lg-4 mb-3">
                                                     <x-forms.label :required="false" name="postcode"
                                                         class="body-font-4 d-block text-gray-900 rt-mb-8" />
                                                     <x-forms.input type="text" name="postcode"
-                                                        value="{{ $candidate->postcode ?? $candidate->bd_post_office ?? '' }}" id="postcode_basic"
+                                                        value="{{ old('postcode', $candidate->postcode ?: ($candidate->bd_post_office ?: '')) }}" id="postcode_basic"
                                                         placeholder="{{ __('postcode') }}" />
                                                 </div>
                                                 <div class="col-lg-12 mb-3">
                                                     <label class="body-font-4 d-block text-gray-900 rt-mb-8">{{ __('house_no_road_village') }}</label>
                                                     <input type="text" name="neighborhood" class="form-control"
-                                                        value="{{ $candidate->neighborhood ?? $candidate->house_road_village ?? '' }}"
+                                                        value="{{ old('neighborhood', $candidate->neighborhood ?: ($candidate->house_road_village ?: '')) }}"
                                                         placeholder="Type House No. / Road / Village">
                                                 </div>
                                             </div>
@@ -323,7 +333,7 @@
                                             </div>
                                         </div>
 
-<div class="col-lg-12 mt-4">
+                                                    <div class="col-lg-12 mt-4">
                                                         <button type="submit" class="btn btn-primary">
                                                             {{ __('save_changes') }}
                                                         </button>
@@ -1844,8 +1854,8 @@
             const thanaEl = document.getElementById('bd_thana_select');
             if (!districtEl || !thanaEl) return;
 
-            const currentDistrict = @json($candidate->locality ?? $candidate->bd_district ?? $candidate->district ?? '');
-            const currentThana = @json($candidate->place ?? $candidate->bd_thana ?? '');
+            const currentDistrict = @json(old('bd_district_name', $candidate->locality ?: ($candidate->bd_district ?: ($candidate->district ?: ''))));
+            const currentThana = @json(old('bd_thana_name', $candidate->bd_thana ?: ($candidate->place ?: '')));
 
             let districts = [];
             let thanaByDistrict = {};
@@ -1858,7 +1868,8 @@
                     jQuery(el).trigger('change.select2');
                 }
             }
-
+            const normalize = (val) => String(val || '').trim().toLowerCase();
+            
             function setOptions(selectEl, options, selectedValue = '') {
                 // reset
                 selectEl.innerHTML = '';
@@ -1866,14 +1877,14 @@
                 def.value = '';
                 def.textContent = "{{ __('select_one') }}";
                 selectEl.appendChild(def);
-
+                const selectedNormalized = normalize(selectedValue);
                 const frag = document.createDocumentFragment();
                 options.forEach(({value, text, data={}}) => {
                     const opt = document.createElement('option');
                     opt.value = value;
                     opt.textContent = text;
                     Object.keys(data).forEach(k => opt.dataset[k] = data[k]);
-                    if (selectedValue && selectedValue === value) opt.selected = true;
+                    if (selectedNormalized && normalize(value) === selectedNormalized) opt.selected = true;
                     frag.appendChild(opt);
                 });
                 selectEl.appendChild(frag);
@@ -1885,6 +1896,18 @@
                 const list = thanaByDistrict[String(districtId)] || [];
                 const opts = list.map(t => ({value: t.name, text: t.name}));
                 setOptions(thanaEl, opts, selectedThana);
+                
+                const selectedNormalized = normalize(selectedThana);
+                const hasSelected = selectedNormalized && [...thanaEl.options].some(o => normalize(o.value) === selectedNormalized);
+                if (selectedThana && !hasSelected) {
+                    const opt = document.createElement('option');
+                    opt.value = selectedThana;
+                    opt.textContent = selectedThana;
+                    opt.selected = true;
+                    thanaEl.appendChild(opt);
+                }
+
+                
                 thanaEl.disabled = false;
                 if (isSelect2(thanaEl)) jQuery(thanaEl).prop('disabled', false);
                 refreshSelect2(thanaEl);
@@ -1915,7 +1938,7 @@
 
                 // If currentDistrict exists, load thanas
                 if (currentDistrict) {
-                    const selectedOpt = [...districtEl.options].find(o => o.value === currentDistrict);
+                    const selectedOpt = [...districtEl.options].find(o => normalize(o.value) === normalize(currentDistrict));
                     const districtId = selectedOpt ? selectedOpt.dataset.districtId : '';
                     if (districtId) {
                         fillThanasByDistrictId(districtId, currentThana || '');
