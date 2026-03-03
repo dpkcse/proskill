@@ -106,6 +106,19 @@
                                                 <div class="col-lg-4">
                                                     <x-website.candidate.photo-section :candidate="$candidate" />
                                                     <x-website.candidate.signature-section :candidate="$candidate" />
+                                                    <div class="mt-4">
+                                                        <h6 class="resume">{{ __('your_cv_resume') }}</h6>
+                                                        <div class="resume-item add-resume" data-bs-toggle="modal"
+                                                            data-bs-target="#resumeModal">
+                                                            <div class="resume-icon">
+                                                                <x-svg.plus-icon />
+                                                            </div>
+                                                            <div>
+                                                                <h4 class="resume-title">{{ __('add_cv_resume') }}</h4>
+                                                                <h6 class="resume-size">{{ __('browse_file_here_only') }} - pdf</h6>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                                 <div class="row col-lg-8">
                                                     <div class="col-lg-6 mb-3">
@@ -1406,7 +1419,7 @@
                     </div>
                     <div class="col-lg-6 mb-3">
                     <x-forms.label name="exam_name" class="rt-mb-8" />
-                    <select name="exam_name" class="select2-taggable w-100-p" required>
+                    <select name="exam_name" class="select2-taggable edu-modal-select w-100-p" required>
                         <option value="">{{ __('select_one') }}</option>
                         <option>PSC / 5 pass</option>
                         <option>JSC/JDC/8 pass</option>
@@ -1421,7 +1434,7 @@
 
                     <div class="col-lg-6 mb-3">
                         <x-forms.label name="degree_name" class="rt-mb-8" />
-                        <select name="degree_name" class="select2-taggable w-100-p">
+                        <select name="degree_name" class="select2-taggable edu-modal-select w-100-p">
                             <option value="">{{ __('select_one') }}</option>
                             <option>Master of Science (MSc)</option>
                             <option>Master of Business Administration (MBA)</option>
@@ -1436,7 +1449,7 @@
 
                     <div class="col-lg-6 mb-3">
                         <x-forms.label name="institute_name" class="rt-mb-8" />
-                        <select name="education_institution_id" class="select2-taggable w-100-p" required>
+                        <select name="education_institution_id" class="select2-taggable edu-modal-select w-100-p" required>
                             <option value="">{{ __('select_one') }}</option>
 
                             @foreach($institutions as $inst)
@@ -1467,7 +1480,7 @@
                     <div class="col-12 mb-3">
                         <x-forms.label name="skills" class="rt-mb-8" />
 
-                        <select name="skills[]" class="select2-taggable w-100-p" multiple>
+                        <select name="skills[]" class="select2-taggable edu-modal-select w-100-p" multiple>
                             @foreach($skills as $skill)
                                 <option value="{{ $skill->id }}"
                                     {{ in_array($skill->id, old('skills', [])) ? 'selected' : '' }}>
@@ -1526,7 +1539,7 @@
 
                         <div class="col-lg-6 mb-3">
                             <x-forms.label name="exam_name" class="rt-mb-8" />
-                            <select name="exam_name" id="education-modal-exam" class="select2-taggable w-100-p" required>
+                            <select name="exam_name" id="education-modal-exam" class="select2-taggable edu-modal-select w-100-p" required>
                                 <option value="">{{ __('select_one') }}</option>
                                 <option>PSC / 5 pass</option>
                                 <option>JSC/JDC/8 pass</option>
@@ -1541,7 +1554,7 @@
 
                         <div class="col-lg-6 mb-3">
                             <x-forms.label name="degree_name" class="rt-mb-8" />
-                            <select name="degree_name" id="education-modal-degree-name" class="select2-taggable w-100-p">
+                            <select name="degree_name" id="education-modal-degree-name" class="select2-taggable edu-modal-select w-100-p">
                                 <option value="">{{ __('select_one') }}</option>
                                 <option>Master of Science (MSc)</option>
                                 <option>Master of Business Administration (MBA)</option>
@@ -1559,7 +1572,7 @@
                         <div class="col-lg-6 mb-3">
                             <x-forms.label name="institute_name" class="rt-mb-8" />
                             <select name="education_institution_id" id="education-modal-inst"
-                                    class="select2-taggable w-100-p" required>
+                                    class="select2-taggable edu-modal-select w-100-p" required>
                                 <option value="">{{ __('select_one') }}</option>
                                 @foreach($institutions as $inst)
                                     <option value="{{ $inst->id }}">{{ $inst->name }}</option>
@@ -1588,7 +1601,7 @@
                         <div class="col-12 mb-3">
                             <x-forms.label name="skills" class="rt-mb-8" />
                             <select name="skills[]" id="education-modal-skills"
-                                    class="select2-taggable w-100-p" multiple>
+                                    class="select2-taggable edu-modal-select w-100-p" multiple>
                                 @foreach($skills as $skill)
                                     <option value="{{ $skill->id }}">{{ $skill->name }}</option>
                                 @endforeach
@@ -1856,6 +1869,20 @@
             max-height: 300px !important;
         }
 
+        /* Education modal Select2 dropdown should appear over modal */
+        #addEducationModal .select2-container,
+        #editEducationModal .select2-container {
+            width: 100% !important;
+            z-index: 2055;
+        }
+
+        #addEducationModal .select2-container--open,
+        #editEducationModal .select2-container--open,
+        #addEducationModal .select2-dropdown,
+        #editEducationModal .select2-dropdown {
+            z-index: 2060 !important;
+        }
+
 
     </style>
 
@@ -1863,6 +1890,19 @@
 @endsection
 
 @section('frontend_scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const ageInput = document.getElementById('age_basic');
+            const birthDateInput = document.getElementById('date');
+            if (!ageInput || !birthDateInput) return;
+
+            ageInput.addEventListener('input', function () {
+                if (ageInput.value && birthDateInput.value) {
+                    birthDateInput.value = '';
+                }
+            });
+        });
+    </script>
     <script>
         document.addEventListener('DOMContentLoaded', async function () {
             const districtEl = document.getElementById('bd_district_select');
@@ -1991,6 +2031,32 @@
         })
     </script>
     @stack('js')
+     <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            function initEducationModalSelect2(modalSelector) {
+                const $modal = $(modalSelector);
+                const $selects = $modal.find('.edu-modal-select');
+                $selects.each(function () {
+                    const $el = $(this);
+                    if ($el.hasClass('select2-hidden-accessible')) {
+                        $el.select2('destroy');
+                    }
+                    $el.select2({
+                        width: '100%',
+                        dropdownParent: $modal
+                    });
+                });
+            }
+
+            $('#addEducationModal').on('shown.bs.modal', function () {
+                initEducationModalSelect2('#addEducationModal');
+            });
+
+            $('#editEducationModal').on('shown.bs.modal', function () {
+                initEducationModalSelect2('#editEducationModal');
+            });
+        });
+    </script>
     <script>
         //init datepicker
         $("#available_id_date").attr("autocomplete", "off");

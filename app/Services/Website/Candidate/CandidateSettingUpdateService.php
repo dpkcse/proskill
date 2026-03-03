@@ -184,11 +184,11 @@ class CandidateSettingUpdateService
             $education = Education::create(['name' => $education_request]);
         }
 
-        if ($request->birth_date) {
+        if ($request->filled('age')) {
+            $date = Carbon::now()->subYears((int) $request->age)->startOfDay()->format('Y-m-d H:i:s');
+        } elseif ($request->birth_date) {
             $dateTime = Carbon::parse($request->birth_date);
             $date = $request['birth_date'] = $dateTime->format('Y-m-d H:i:s');
-        } elseif ($request->filled('age')) {
-            $date = Carbon::now()->subYears((int) $request->age)->startOfDay()->format('Y-m-d H:i:s');
         }
 
         $candidateData = [
