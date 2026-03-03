@@ -37,7 +37,20 @@ class CandidateSettingUpdateService
         if ($request->type == 'basic') {
             $this->candidateBasicInfoUpdate($request, $user, $candidate);
             $this->contactUpdate($request, $candidate);
-            $this->basicAccountSettingsUpdate($request, $user);
+            if ($request->filled('account_email') && $request->account_email !== $user->email) {
+                $this->emailUpdate($request);
+            }
+
+            if ($request->filled('password') || $request->filled('password_confirmation')) {
+                $request->validate([
+                    'password' => 'required|confirmed|min:6',
+                    'password_confirmation' => 'required',
+                ]);
+
+                $user->update([
+                    'password' => bcrypt($request->password),
+                ]);
+            }
             $candidate->update(['profile_complete' => $candidate->profile_complete != 0 ? $candidate->profile_complete - 20 : 0]);
             flashSuccess(__('profile_updated'));
 
