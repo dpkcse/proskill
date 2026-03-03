@@ -311,7 +311,7 @@
                                                     <x-forms.label :required="false" name="account_email"
                                                         class="body-font-4 d-block text-gray-900 rt-mb-8" />
                                                     <x-forms.input type="email" name="account_email"
-                                                        value="{{ auth()->user()->email }}" id="account_email_basic"
+                                                        value="{{ old('account_email', auth()->user()->email) }}" id="account_email_basic"
                                                         placeholder="{{ __('email') }}" />
                                                 </div>
 

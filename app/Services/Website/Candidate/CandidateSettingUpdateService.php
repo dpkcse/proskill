@@ -37,6 +37,7 @@ class CandidateSettingUpdateService
         if ($request->type == 'basic') {
             $this->candidateBasicInfoUpdate($request, $user, $candidate);
             $this->contactUpdate($request, $candidate);
+            $this->basicAccountSettingsUpdate($request, $user);
             $candidate->update(['profile_complete' => $candidate->profile_complete != 0 ? $candidate->profile_complete - 20 : 0]);
             flashSuccess(__('profile_updated'));
 
