@@ -202,13 +202,13 @@
 
                                                     @if (setting('candidate_birth_date_active'))
                                                     <div class="col-lg-6 mb-3">
-                                                        <x-forms.label :required="true" name="date_of_birth"
+                                                        <x-forms.label :required="false" name="date_of_birth"
                                                             class="body-font-4 d-block text-gray-900 rt-mb-8" />
                                                         <div class="fromGroup">
                                                             <div
                                                                 class="d-flex align-items-center form-control-icon date datepicker">
                                                                 <input type="text" name="birth_date"
-                                                                    value="{{ $candidate->birth_date ? date('d-m-Y', strtotime($candidate->birth_date)) : old('birth_date') }}"
+                                                                   value="{{ old('birth_date', $candidate->birth_date ? date('d-m-Y', strtotime($candidate->birth_date)) : '') }}"
                                                                     id="date" placeholder="dd/mm/yyyy"
                                                                     class="form-control border-cutom @error('birth_date') is-invalid @enderror" />
                                                                 <span class="input-group-addon input-group-text-custom">
@@ -216,6 +216,21 @@
                                                                 </span>
                                                             </div>
                                                         </div>
+                                                         @error('birth_date')
+                                                            <span class="text-danger">{{ $message }}</span>
+                                                        @enderror
+                                                    </div>
+                                                    <div class="col-lg-6 mb-3">
+                                                        <x-forms.label :required="false" name="age"
+                                                            class="body-font-4 d-block text-gray-900 rt-mb-8" />
+                                                        <x-forms.input type="number" name="age"
+                                                            value="{{ old('age', $candidate->birth_date ? \Carbon\Carbon::parse($candidate->birth_date)->age : '') }}"
+                                                            id="age_basic" placeholder="{{ __('age') }}"
+                                                            min="1" max="100" />
+                                                        <small class="text-muted">{{ __('date_of_birth') }} / {{ __('age') }}</small>
+                                                        @error('age')
+                                                            <span class="text-danger d-block">{{ $message }}</span>
+                                                        @enderror
                                                     </div>
                                                     @endif
                                                     

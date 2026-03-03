@@ -156,13 +156,14 @@ class CandidateSettingUpdateService
     {
         $rules = [
             'name' => 'required',
-            'birth_date' => 'required',
+            'birth_date' => 'nullable|required_without:age',
+            'age' => 'nullable|integer|min:1|max:100|required_without:birth_date',
             'education' => 'required',
             'experience' => 'required',
             'nationality' => 'required',
         ];
         if (! setting('candidate_birth_date_active')) {
-            unset($rules['birth_date']);
+            unset($rules['birth_date'], $rules['age']);
         }
         $request->validate($rules);
         $user->update(['name' => $request->name]);
@@ -186,6 +187,8 @@ class CandidateSettingUpdateService
         if ($request->birth_date) {
             $dateTime = Carbon::parse($request->birth_date);
             $date = $request['birth_date'] = $dateTime->format('Y-m-d H:i:s');
+        } elseif ($request->filled('age')) {
+            $date = Carbon::now()->subYears((int) $request->age)->startOfDay()->format('Y-m-d H:i:s');
         }
 
         $candidateData = [
