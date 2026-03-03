@@ -39,7 +39,15 @@ class CandidateSettingUpdateService
             $this->contactUpdate($request, $candidate);
 
             if ($request->filled('account_email') && $request->account_email !== $user->email) {
-                $this->emailUpdate($request);
+                $request->validate([
+                    'account_email' => 'required|email|unique:users,email,'.$user->id,
+                ]);
+
+                $user->update([
+                    'email' => $request->account_email,
+                ]);
+                Mail::to($validated['account_email'])->send(new SendEmailUpdateVerification($user, $validated['account_email']));
+                session()->put('requested_email', $validated['account_email']);
             }
 
             if ($request->filled('password') || $request->filled('password_confirmation')) {
