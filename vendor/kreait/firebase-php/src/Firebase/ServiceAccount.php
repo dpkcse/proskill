@@ -19,19 +19,19 @@ final class ServiceAccount
         /** @var non-empty-string */
         public string $clientEmail,
         /** @var non-empty-string */
-        public string $clientId,
-        /** @var non-empty-string */
         public string $privateKey,
-        /** @var non-empty-string */
-        public string $privateKeyId,
-        /** @var non-empty-string */
-        public string $authUri,
-        /** @var non-empty-string */
-        public string $tokenUri,
-        /** @var non-empty-string */
-        public string $authProviderX509CertUrl,
-        /** @var non-empty-string */
-        public string $clientX509CertUrl,
+        /** @var non-empty-string|null */
+        public ?string $clientId = null,
+        /** @var non-empty-string|null */
+        public ?string $privateKeyId = null,
+        /** @var non-empty-string|null */
+        public ?string $authUri = null,
+        /** @var non-empty-string|null */
+        public ?string $tokenUri = null,
+        /** @var non-empty-string|null */
+        public ?string $authProviderX509CertUrl = null,
+        /** @var non-empty-string|null */
+        public ?string $clientX509CertUrl = null,
         /** @var non-empty-string|null */
         public ?string $quotaProjectId = null,
         /** @var non-empty-string|null */

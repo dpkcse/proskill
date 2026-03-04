@@ -88,7 +88,7 @@ class GdDriver implements ImageDriver
         try {
             $image = imagecreatefromstring($contents);
         } catch (Throwable $throwable) {
-            throw CouldNotLoadImage::make(`{$path} : {$throwable->getMessage()}`);
+            throw CouldNotLoadImage::make("{$path} : {$throwable->getMessage()}");
         }
 
         if (! $image) {
@@ -590,7 +590,6 @@ class GdDriver implements ImageDriver
         }
 
         $info = finfo_file($fInfo, $path);
-        finfo_close($fInfo);
 
         if (! is_string($info) || ! str_contains($info, 'Exif')) {
             return;

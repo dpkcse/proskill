@@ -13,6 +13,7 @@ class ContactInfo extends Model
         'user_id',
         'phone',
         'secondary_phone',
+        'whatsapp_number',
         'email',
         'secondary_email',
     ];

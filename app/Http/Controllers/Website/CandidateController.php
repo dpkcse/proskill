@@ -11,12 +11,16 @@ use App\Models\Candidate;
 use App\Models\CandidateLanguage;
 use App\Models\CandidateResume;
 use App\Models\Company;
+use App\Models\SearchCountry;
 use App\Models\ContactInfo;
 use App\Models\Education;
 use App\Models\Experience;
 use App\Models\JobRole;
+use App\Models\JobCategory;
 use App\Models\Profession;
 use App\Models\Skill;
+use App\Models\EducationInstitution;
+use App\Models\CandidateEducation;
 use App\Services\Website\Candidate\CandidateSettingUpdateService;
 use App\Services\Website\Candidate\DashboardService;
 use Illuminate\Http\Request;
@@ -218,6 +222,8 @@ class CandidateController extends Controller
 
             // for social link
             $socials = auth()->user()->socialInfo;
+            // for extracurricular link
+            $extracurriculars = auth()->user()->extracurricularInfo;
 
             // for candidate resume/cv
             $resumes = $candidate->resumes;
@@ -227,20 +233,29 @@ class CandidateController extends Controller
             $educations = Education::all();
             $professions = Profession::all()->sortBy('name');
             $skills = Skill::all()->sortBy('name');
+            $job_categories = JobCategory::all()->sortBy('name');
             $languages = CandidateLanguage::all(['id', 'name']);
-            $candidate->load('skills', 'languages', 'experiences', 'educations', 'jobRoleAlerts:id,candidate_id,job_role_id');
+            // দেশগুলো নাম অনুযায়ী alphabetical order এ
+            $countries = SearchCountry::orderBy('name', 'asc')->get();
+            $candidate->load('skills', 'languages', 'experiences', 'educations.skills', 'experienceSkills.category', 'experienceSkills.skill', 'jobRoleAlerts:id,candidate_id,job_role_id');
+
+            $institutions = EducationInstitution::orderBy('name', 'asc')->get();
 
             return view('frontend.pages.candidate.setting', [
                 'candidate' => $candidate->load('skills', 'languages'),
                 'contact' => $contact,
                 'socials' => $socials,
+                'extracurriculars' => $extracurriculars,
                 'job_roles' => $job_roles,
                 'experiences' => $experiences,
                 'educations' => $educations,
                 'professions' => $professions,
                 'resumes' => $resumes,
                 'skills' => $skills,
+                'job_categories' => $job_categories,
                 'candidate_languages' => $languages,
+                'countries'=>$countries,
+                'institutions' => $institutions,
             ]);
         } catch (\Exception $e) {
             flashError('An error occurred: '.$e->getMessage());
@@ -321,4 +336,116 @@ class CandidateController extends Controller
             return back();
         }
     }
+
+    public function educationStore(Request $request)
+    {
+        $request->session()->put('type', 'education');
+
+        $data = $request->validate([
+            'is_institute_accredited'   => ['nullable', 'in:0,1'],
+            'exam_name'                 => ['required', 'string', 'max:255'],
+            'degree_name'               => ['nullable', 'string', 'max:255'],
+            'major_subject'             => ['nullable', 'string', 'max:255'],
+            'education_institution_id'  => ['required', 'integer'],
+            'passing_year'              => ['nullable', 'digits:4'],
+            'result'                    => ['nullable', 'string', 'max:255'],
+            'board'                     => ['nullable', 'string', 'max:255'],
+            'skills'                    => ['nullable', 'array'],
+            'skills.*'                  => ['integer'],
+        ]);
+
+        return DB::transaction(function () use ($data) {
+
+            $instName = EducationInstitution::where('id', $data['education_institution_id'])->value('name');
+
+            $education = CandidateEducation::create([
+                'candidate_id'             => currentCandidate()->id,
+
+                'exam_name'                => $data['exam_name'],
+                'degree_name'              => $data['degree_name'] ?? null,
+                'major_subject'            => $data['major_subject'] ?? null,
+                'education_institution_id' => $data['education_institution_id'],
+                'institute_name'           => $instName,
+                'passing_year'             => $data['passing_year'] ?? null,
+                'result'                   => $data['result'] ?? null,
+                'board'                    => $data['board'] ?? null,
+                'is_institute_accredited'  => $data['is_institute_accredited'] ?? null,
+
+                // আপনার পুরনো কলাম থাকলে রাখবেন, না থাকলে remove করবেন
+                'level'                    => $data['exam_name'],
+                'degree'                   => $data['degree_name'] ?? $data['exam_name'],
+                'year'                     => (int)($data['passing_year'] ?? 0),
+            ]);
+
+            $education->skills()->sync($data['skills'] ?? []);
+
+            return back()->with('success', __('Education added successfully'));
+        });
+    }
+
+    public function educationUpdate(Request $request)
+    {
+        $request->session()->put('type', 'education');
+
+        $data = $request->validate([
+            'education_id'              => ['required', 'integer'],
+
+            'is_institute_accredited'   => ['nullable', 'in:0,1'],
+            'exam_name'                 => ['required', 'string', 'max:255'],
+            'degree_name'               => ['nullable', 'string', 'max:255'],
+            'major_subject'             => ['nullable', 'string', 'max:255'],
+            'education_institution_id'  => ['required', 'integer'],
+            'passing_year'              => ['nullable', 'digits:4'],
+            'result'                    => ['nullable', 'string', 'max:255'],
+            'board'                     => ['nullable', 'string', 'max:255'],
+            'skills'                    => ['nullable', 'array'],
+            'skills.*'                  => ['integer'],
+        ]);
+
+        return DB::transaction(function () use ($data) {
+
+            $education = CandidateEducation::where('id', $data['education_id'])
+                ->where('candidate_id', currentCandidate()->id)
+                ->firstOrFail();
+
+            $instName = EducationInstitution::where('id', $data['education_institution_id'])->value('name');
+
+            $education->update([
+                'exam_name'                => $data['exam_name'],
+                'degree_name'              => $data['degree_name'] ?? null,
+                'major_subject'            => $data['major_subject'] ?? null,
+                'education_institution_id' => $data['education_institution_id'],
+                'institute_name'           => $instName,
+                'passing_year'             => $data['passing_year'] ?? null,
+                'result'                   => $data['result'] ?? null,
+                'board'                    => $data['board'] ?? null,
+                'is_institute_accredited'  => $data['is_institute_accredited'] ?? null,
+
+                // legacy থাকলে রাখবেন
+                'level'                    => $data['exam_name'],
+                'degree'                   => $data['degree_name'] ?? $data['exam_name'],
+                'year'                     => (int)($data['passing_year'] ?? 0),
+            ]);
+
+            $education->skills()->sync($data['skills'] ?? []);
+
+            return back()->with('success', __('Education updated successfully'));
+        });
+    }
+
+    public function educationDelete(CandidateEducation $education)
+    {
+        $requestType = request()->session()->put('type', 'education');
+
+        // candidate ownership check
+        if ($education->candidate_id !== currentCandidate()->id) {
+            abort(403);
+        }
+
+        $education->skills()->detach();
+        $education->delete();
+
+        return back()->with('success', __('Education deleted successfully'));
+    }
+
 }

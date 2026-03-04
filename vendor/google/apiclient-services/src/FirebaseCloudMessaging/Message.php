@@ -24,26 +24,44 @@ class Message extends \Google\Model
   protected $apnsType = ApnsConfig::class;
   protected $apnsDataType = '';
   /**
+   * Condition to send a message to, e.g. "'foo' in topics && 'bar' in topics".
+   *
    * @var string
    */
   public $condition;
   /**
+   * Input only. Arbitrary key/value payload, which must be UTF-8 encoded. The
+   * key should not be a reserved word ("from", "message_type", or any word
+   * starting with "google." or "gcm.notification."). When sending payloads
+   * containing only data fields to iOS devices, only normal priority (`"apns-
+   * priority": "5"`) is allowed in
+   * [`ApnsConfig`](/docs/reference/fcm/rest/v1/projects.messages#apnsconfig).
+   *
    * @var string[]
    */
   public $data;
   protected $fcmOptionsType = FcmOptions::class;
   protected $fcmOptionsDataType = '';
   /**
+   * Output Only. The identifier of the message sent, in the format of
+   * `projects/messages/{message_id}`.
+   *
    * @var string
    */
   public $name;
   protected $notificationType = Notification::class;
   protected $notificationDataType = '';
   /**
+   * Registration token to send a message to.
+   *
+   * @deprecated
    * @var string
    */
   public $token;
   /**
+   * Topic name to send a message to, e.g. "weather". Note: "/topics/" prefix
+   * should not be provided.
+   *
    * @var string
    */
   public $topic;
@@ -51,7 +69,10 @@ class Message extends \Google\Model
   protected $webpushDataType = '';
 
   /**
-   * @param AndroidConfig
+   * Input only. Android specific options for messages sent through [FCM
+   * connection server](https://goo.gl/4GLdUl).
+   *
+   * @param AndroidConfig $android
    */
   public function setAndroid(AndroidConfig $android)
   {
@@ -65,7 +86,10 @@ class Message extends \Google\Model
     return $this->android;
   }
   /**
-   * @param ApnsConfig
+   * Input only. [Apple Push Notification Service](https://goo.gl/MXRTPa)
+   * specific options.
+   *
+   * @param ApnsConfig $apns
    */
   public function setApns(ApnsConfig $apns)
   {
@@ -79,7 +103,9 @@ class Message extends \Google\Model
     return $this->apns;
   }
   /**
-   * @param string
+   * Condition to send a message to, e.g. "'foo' in topics && 'bar' in topics".
+   *
+   * @param string $condition
    */
   public function setCondition($condition)
   {
@@ -93,7 +119,14 @@ class Message extends \Google\Model
     return $this->condition;
   }
   /**
-   * @param string[]
+   * Input only. Arbitrary key/value payload, which must be UTF-8 encoded. The
+   * key should not be a reserved word ("from", "message_type", or any word
+   * starting with "google." or "gcm.notification."). When sending payloads
+   * containing only data fields to iOS devices, only normal priority (`"apns-
+   * priority": "5"`) is allowed in
+   * [`ApnsConfig`](/docs/reference/fcm/rest/v1/projects.messages#apnsconfig).
+   *
+   * @param string[] $data
    */
   public function setData($data)
   {
@@ -107,7 +140,10 @@ class Message extends \Google\Model
     return $this->data;
   }
   /**
-   * @param FcmOptions
+   * Input only. Template for FCM SDK feature options to use across all
+   * platforms.
+   *
+   * @param FcmOptions $fcmOptions
    */
   public function setFcmOptions(FcmOptions $fcmOptions)
   {
@@ -121,7 +157,10 @@ class Message extends \Google\Model
     return $this->fcmOptions;
   }
   /**
-   * @param string
+   * Output Only. The identifier of the message sent, in the format of
+   * `projects/messages/{message_id}`.
+   *
+   * @param string $name
    */
   public function setName($name)
   {
@@ -135,7 +174,9 @@ class Message extends \Google\Model
     return $this->name;
   }
   /**
-   * @param Notification
+   * Input only. Basic notification template to use across all platforms.
+   *
+   * @param Notification $notification
    */
   public function setNotification(Notification $notification)
   {
@@ -149,13 +190,17 @@ class Message extends \Google\Model
     return $this->notification;
   }
   /**
-   * @param string
+   * Registration token to send a message to.
+   *
+   * @deprecated
+   * @param string $token
    */
   public function setToken($token)
   {
     $this->token = $token;
   }
   /**
+   * @deprecated
    * @return string
    */
   public function getToken()
@@ -163,7 +208,10 @@ class Message extends \Google\Model
     return $this->token;
   }
   /**
-   * @param string
+   * Topic name to send a message to, e.g. "weather". Note: "/topics/" prefix
+   * should not be provided.
+   *
+   * @param string $topic
    */
   public function setTopic($topic)
   {
@@ -177,7 +225,10 @@ class Message extends \Google\Model
     return $this->topic;
   }
   /**
-   * @param WebpushConfig
+   * Input only. [Webpush protocol](https://tools.ietf.org/html/rfc8030)
+   * options.
+   *
+   * @param WebpushConfig $webpush
    */
   public function setWebpush(WebpushConfig $webpush)
   {

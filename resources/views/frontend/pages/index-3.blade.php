@@ -16,11 +16,17 @@
 @section('main')
     <section class="hero-section-3">
         <div class="container">
-            <div class="tw-flex tw-justify-center tw-items-center tw-relative tw-z-50">
-                <div class="tw-max-w-3xl tw-text-white tw-text-center">
+            <div class="tw-flex tw-justify-left tw-items-left tw-relative tw-z-50">
+                <div class="tw-max-w-3xl tw-text-white tw-text-left">
                     <h1 class="tw-text-white">{!! __('no_1_job_portal_home_3') !!}</h1>
                     <p>{{ __('job_seekers_stats') }}</p>
-                    <form action="{{ route('website.job') }}" method="GET" id="job_search_form">
+                    <div style="margin-top:50px"></div>
+                    <div class="d-flex flex-wrap gap-3">
+                        <a href="/jobs" class="btn btn-pill btn-job">Find a job</a>
+                        <a href="/candidates" class="btn btn-pill btn-talent">Find talent</a>
+                    </div>
+
+                    <!-- <form action="{{ route('website.job') }}" method="GET" id="job_search_form">
                         <div class="jobsearchBox d-flex flex-column flex-md-row bg-gray-10 input-transparent rt-mb-24"
                             data-aos="fadeinup" data-aos-duration="400" data-aos-delay="50">
                             <div class="flex-grow-1 fromGroup has-icon">
@@ -76,7 +82,7 @@
                                 @endif
                             @endforeach
                         </div>
-                    @endif
+                    @endif -->
                 </div>
             </div>
         </div>

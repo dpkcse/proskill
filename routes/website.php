@@ -137,8 +137,10 @@ Route::middleware('auth:user', 'verified')->group(function () {
         Route::post('/experiences/store', 'experienceStore')->name('experiences.store');
         Route::put('/experiences/update', 'experienceUpdate')->name('experiences.update');
         Route::delete('/experiences/{experience}', 'experienceDelete')->name('experiences.destroy');
-        Route::post('/educations/store', 'educationStore')->name('educations.store');
-        Route::put('/educations/update', 'educationUpdate')->name('educations.update');
+        // Route::post('/educations/store', 'educationStore')->name('educations.store');
+        // Route::put('/educations/update', 'educationUpdate')->name('educations.update');
+        Route::post('/educations','educationStore')->name('educations.store');
+        Route::post('/educations/update', 'educationUpdate')->name('educations.update');
         Route::delete('/educations/{education}', 'educationDelete')->name('educations.destroy');
         Route::post('/cv/show', 'cvShow')->name('cv.show');
     });

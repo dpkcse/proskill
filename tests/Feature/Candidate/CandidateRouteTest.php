@@ -228,6 +228,53 @@ it('candidate basic info update with valid data', function () {
     ]);
 });
 
+it('updates candidate contact and address information from settings', function () {
+    $this->seed([
+        JobTypeSeeder::class,
+        JobRoleSeeder::class,
+        ProfessionSeeder::class,
+    ]);
+
+    $user = User::factory()->create(['role' => 'candidate']);
+    $this->actingAs($user);
+
+    $candidate = $user->candidate;
+
+    $this->withSession([
+        'location' => [
+            'country' => 'Bangladesh',
+            'region' => 'Dhaka',
+            'district' => 'Dhaka',
+            'lng' => '90.4125',
+            'lat' => '23.8103',
+            'exact_location' => 'Gulshan, Dhaka, Bangladesh',
+        ],
+    ])->put(route('candidate.settingUpdate'), [
+        'type' => 'contact',
+        'phone' => '01700000000',
+        'secondary_phone' => '01800000000',
+        'email' => 'candidate-contact@example.com',
+        'secondary_email' => 'candidate-contact2@example.com',
+        'whatsapp_number' => '01900000000',
+    ])->assertRedirect();
+
+    $candidate->refresh();
+    $user->contactInfo->refresh();
+
+    expect($user->contactInfo->phone)->toBe('01700000000')
+        ->and($user->contactInfo->secondary_phone)->toBe('01800000000')
+        ->and($user->contactInfo->email)->toBe('candidate-contact@example.com')
+        ->and($user->contactInfo->secondary_email)->toBe('candidate-contact2@example.com')
+        ->and($user->contactInfo->whatsapp_number)->toBe('01900000000')
+        ->and($candidate->whatsapp_number)->toBe('01900000000')
+        ->and($candidate->country)->toBe('Bangladesh')
+        ->and($candidate->region)->toBe('Dhaka')
+        ->and($candidate->district)->toBe('Dhaka')
+        ->and((string) $candidate->lat)->toContain('23.8103')
+        ->and((string) $candidate->long)->toContain('90.4125')
+        ->and($candidate->exact_location)->toBe('Gulshan, Dhaka, Bangladesh');
+});
+
 it('can store candidate experience', function () {
     // Seeding the database with necessary data for the test
     $this->seed([
