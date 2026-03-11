@@ -290,7 +290,7 @@
                                         </div>
 
                                         <div class="dashboard-account-setting-item">
-                                            <h6>{{ __('address') }}</h6>
+                                            <h6>Present Address</h6>
                                             <div class="row">
                                                 <div class="col-lg-4 mb-3">
                                                     <label class="body-font-4 d-block text-gray-900 rt-mb-8">{{ __('district') }}</label>
@@ -328,7 +328,51 @@
                                                         placeholder="Type House No. / Road / Village">
                                                 </div>
                                             </div>
-                                            <p class="small text-muted m-0">{{ __('district_thana_saved_in_candidate_location_fields') }}</p>
+                                        </div>
+
+                                        <div class="dashboard-account-setting-item">
+                                            <h6>Permanent Address</h6>
+                                            @php
+                                                $permanentAddress = old('permanent_address', $candidate->permanent_address ?? '');
+                                            @endphp
+                                            <div class="row">
+                                                <div class="col-lg-4 mb-3">
+                                                    <label class="body-font-4 d-block text-gray-900 rt-mb-8">{{ __('district') }}</label>
+                                                    <select id="permanent_bd_district_select" class="rt-selectactive w-100-p" name="permanent_bd_district_name">
+                                                        <option value="">{{ __('select_one') }}</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-lg-4 mb-3">
+                                                    <label class="body-font-4 d-block text-gray-900 rt-mb-8">{{ __('thana_upazila') }}</label>
+                                                    <select id="permanent_bd_thana_select" class="rt-selectactive w-100-p" name="permanent_bd_thana_name" disabled>
+                                                        <option value="">{{ __('select_one') }}</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-lg-4 mb-3">
+                                                    <x-forms.label :required="false" name="postcode"
+                                                        class="body-font-4 d-block text-gray-900 rt-mb-8" />
+                                                    <x-forms.input type="text" name="permanent_postcode"
+                                                        value="{{ old('permanent_postcode') }}" id="permanent_postcode_basic"
+                                                        placeholder="{{ __('postcode') }}" />
+                                                </div>
+                                                <div class="col-lg-12 mb-3">
+                                                    <label class="body-font-4 d-block text-gray-900 rt-mb-8">{{ __('house_no_road_village') }}</label>
+                                                    <input type="text" name="permanent_neighborhood" class="form-control"
+                                                        value="{{ old('permanent_neighborhood') }}"
+                                                        placeholder="Type House No. / Road / Village">
+                                                </div>
+                                            </div>
+                                            <input type="hidden" id="permanent_address_existing" value="{{ $permanentAddress }}">
+                                        </div>
+
+                                        <div class="dashboard-account-setting-item">
+                                            <h6>International Address</h6>
+                                            <div class="row">
+                                                <div class="col-lg-12 mb-3">
+                                                    <label class="body-font-4 d-block text-gray-900 rt-mb-8">{{ __('international_address') }}</label>
+                                                    <textarea name="international_address" class="form-control" rows="3" placeholder="Type International Address">{{ old('international_address', $candidate->international_address ?? '') }}</textarea>
+                                                </div>
+                                            </div>
                                         </div>
 
                                         {{-- Account settings (in Basic form) --}}
@@ -1880,7 +1924,7 @@
         #editEducationModal .select2-container--open,
         #addEducationModal .select2-dropdown,
         #editEducationModal .select2-dropdown {
-            z-index: 2060 !important;
+            z-index: 999999  !important;
         }
 
 
@@ -1905,12 +1949,27 @@
     </script>
     <script>
         document.addEventListener('DOMContentLoaded', async function () {
-            const districtEl = document.getElementById('bd_district_select');
-            const thanaEl = document.getElementById('bd_thana_select');
-            if (!districtEl || !thanaEl) return;
+            const presentDistrictEl = document.getElementById('bd_district_select');
+            const presentThanaEl = document.getElementById('bd_thana_select');
+            const permanentDistrictEl = document.getElementById('permanent_bd_district_select');
+            const permanentThanaEl = document.getElementById('permanent_bd_thana_select');
+
+            if (!presentDistrictEl || !presentThanaEl || !permanentDistrictEl || !permanentThanaEl) return;
 
             const currentDistrict = @json(old('bd_district_name', $candidate->locality ?: ($candidate->bd_district ?: ($candidate->district ?: ''))));
             const currentThana = @json(old('bd_thana_name', $candidate->bd_thana ?: ($candidate->place ?: '')));
+
+            const permanentExisting = document.getElementById('permanent_address_existing')?.value || '';
+            const permanentParts = permanentExisting ? permanentExisting.split(',').map(v => v.trim()) : [];
+            const currentPermanentNeighborhood = @json(old('permanent_neighborhood')) || (permanentParts[0] || '');
+            const currentPermanentThana = @json(old('permanent_bd_thana_name')) || (permanentParts[1] || '');
+            const currentPermanentDistrict = @json(old('permanent_bd_district_name')) || (permanentParts[2] || '');
+            const currentPermanentPostcode = @json(old('permanent_postcode')) || (permanentParts[3] || '');
+
+            const permanentPostcodeEl = document.getElementById('permanent_postcode_basic');
+            if (permanentPostcodeEl && !permanentPostcodeEl.value && currentPermanentPostcode) {
+                permanentPostcodeEl.value = currentPermanentPostcode;
+            }
 
             let districts = [];
             let thanaByDistrict = {};
@@ -1923,15 +1982,15 @@
                     jQuery(el).trigger('change.select2');
                 }
             }
-            const normalize = (val) => String(val || '').trim().toLowerCase();
+             const normalize = (val) => String(val || '').trim().toLowerCase();
             
             function setOptions(selectEl, options, selectedValue = '') {
-                // reset
                 selectEl.innerHTML = '';
                 const def = document.createElement('option');
                 def.value = '';
                 def.textContent = "{{ __('select_one') }}";
                 selectEl.appendChild(def);
+
                 const selectedNormalized = normalize(selectedValue);
                 const frag = document.createDocumentFragment();
                 options.forEach(({value, text, data={}}) => {
@@ -1946,12 +2005,12 @@
                 refreshSelect2(selectEl);
             }
 
-            function fillThanasByDistrictId(districtId, selectedThana = '') {
+            function fillThanasByDistrictId(thanaEl, districtId, selectedThana = '') {
                 thanaEl.disabled = true;
                 const list = thanaByDistrict[String(districtId)] || [];
                 const opts = list.map(t => ({value: t.name, text: t.name}));
                 setOptions(thanaEl, opts, selectedThana);
-                
+
                 const selectedNormalized = normalize(selectedThana);
                 const hasSelected = selectedNormalized && [...thanaEl.options].some(o => normalize(o.value) === selectedNormalized);
                 if (selectedThana && !hasSelected) {
@@ -1962,67 +2021,62 @@
                     thanaEl.appendChild(opt);
                 }
 
-                
                 thanaEl.disabled = false;
                 if (isSelect2(thanaEl)) jQuery(thanaEl).prop('disabled', false);
                 refreshSelect2(thanaEl);
             }
 
-            function getSelectedDistrictId() {
+            function getSelectedDistrictId(districtEl) {
                 const opt = districtEl.options[districtEl.selectedIndex];
                 return opt ? (opt.dataset.districtId || '') : '';
             }
 
-            try {
-                const dRes = await fetch("{{ asset('frontend/assets/json/bd_districts.json') }}", { cache: "no-store" });
-                const tRes = await fetch("{{ asset('frontend/assets/json/bd_thana_by_district.json') }}", { cache: "no-store" });
+            function bindDistrictThana(districtEl, thanaEl) {
+                const onDistrictChange = function () {
+                    const districtId = getSelectedDistrictId(districtEl);
+                    setOptions(thanaEl, [], '');
+                    thanaEl.disabled = true;
+                    if (!districtId) return;
+                    fillThanasByDistrictId(thanaEl, districtId, '');
+                };
 
-                const dJson = await dRes.json();
-                const tJson = await tRes.json();
+                districtEl.addEventListener('change', onDistrictChange);
+                if (isSelect2(districtEl)) {
+                    jQuery(districtEl)
+                        .off('select2:select.candidateAddress')
+                        .on('select2:select.candidateAddress', onDistrictChange);
+                }
+            }
 
+            Promise.all([
+                fetch("{{ asset('frontend/assets/json/bd_districts.json') }}", { cache: "no-store" }).then(r => r.json()),
+                fetch("{{ asset('frontend/assets/json/bd_thana_by_district.json') }}", { cache: "no-store" }).then(r => r.json())
+            ]).then(([dJson, tJson]) => {
                 districts = Array.isArray(dJson) ? dJson : (dJson.districts || []);
                 thanaByDistrict = (tJson.thanas_by_district || tJson) || {};
-
-                // Fill districts (value = name; keep id in data)
                 const districtOpts = districts.map(d => ({
                     value: d.name,
                     text: d.name,
                     data: { districtId: d.id }
                 }));
-                setOptions(districtEl, districtOpts, currentDistrict);
-
-                // If currentDistrict exists, load thanas
+                setOptions(presentDistrictEl, districtOpts, currentDistrict);
+                setOptions(permanentDistrictEl, districtOpts, currentPermanentDistrict);
                 if (currentDistrict) {
-                    const selectedOpt = [...districtEl.options].find(o => normalize(o.value) === normalize(currentDistrict));
+                    const selectedOpt = [...presentDistrictEl.options].find(o => normalize(o.value) === normalize(currentDistrict));
                     const districtId = selectedOpt ? selectedOpt.dataset.districtId : '';
-                    if (districtId) {
-                        fillThanasByDistrictId(districtId, currentThana || '');
-                    }
+                    if (districtId) fillThanasByDistrictId(presentThanaEl, districtId, currentThana || '');
                 }
-
-                // Native change
-                districtEl.addEventListener('change', function () {
-                    const districtId = getSelectedDistrictId();
-                    // reset thana
-                    setOptions(thanaEl, [], '');
-                    thanaEl.disabled = true;
-                    if (!districtId) return;
-                    fillThanasByDistrictId(districtId, '');
-                });
-
-                // Select2 change
-                if (isSelect2(districtEl)) {
-                    jQuery(districtEl).on('select2:select', function () {
-                        const districtId = getSelectedDistrictId();
-                        setOptions(thanaEl, [], '');
-                        thanaEl.disabled = true;
-                        if (!districtId) return;
-                        fillThanasByDistrictId(districtId, '');
-                    });
+                if (currentPermanentDistrict) {
+                    const selectedPermanentOpt = [...permanentDistrictEl.options].find(o => normalize(o.value) === normalize(currentPermanentDistrict));
+                    const permanentDistrictId = selectedPermanentOpt ? selectedPermanentOpt.dataset.districtId : '';
+                    if (permanentDistrictId) fillThanasByDistrictId(permanentThanaEl, permanentDistrictId, currentPermanentThana || '');
                 }
-            } catch (e) {
+                bindDistrictThana(presentDistrictEl, presentThanaEl);
+                bindDistrictThana(permanentDistrictEl, permanentThanaEl);
+            }).catch((e) => {
                 console.error('BD district/thana JSON load failed', e);
-            }
+            });
+
         });
     </script>
     <script>
