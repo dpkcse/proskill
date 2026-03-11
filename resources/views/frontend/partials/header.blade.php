@@ -13,6 +13,12 @@ config('templatecookie.default_language'))->first();
 {{-- For testing environment --}}
 
 <header class="header rt-fixed-top">
+    <style>
+        .n-header--bottom.auth-user-bg {
+            background: #67256A !important; 
+            box-shadow: 0 2px 12px rgba(15, 23, 42, 0.08);
+        }
+    </style>
     <script>
         function changeSearchSelections() {
             var job_search_url = "{{ route('website.job') }}";
@@ -34,7 +40,7 @@ config('templatecookie.default_language'))->first();
         
         <!-- End Header top -->
          <!-- Top Notice Bar (Bootstrap 5.0.2) -->
-        <nav class="topbar-notice d-none d-md-block" role="region" aria-label="Site notice">
+        <nav class="topbar-notice d-none d-md-block {{ auth('user')->check() ? 'auth-user-bg' : '' }}" role="region" aria-label="Site notice">
             <div class="container-xxl">
                 <div class="row align-items-center g-2 text-center text-sm-start">
 
@@ -108,7 +114,7 @@ config('templatecookie.default_language'))->first();
                 </div>
             </div>
         </nav>
-        <div class="n-header--bottom">
+        <div class="n-header--bottom {{ auth('user')->check() ? 'auth-user-bg' : '' }}">
             <div class="container position-relative">
                 <div class="d-flex flex-wrap  tw-gap-2 tw-items-center">
                     <div class="n-header--bottom__left d-flex align-items-center menu-header">

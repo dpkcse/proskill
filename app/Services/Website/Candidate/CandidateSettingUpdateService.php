@@ -229,6 +229,19 @@ class CandidateSettingUpdateService
             $candidateData['bd_post_office'] = $request->postcode;
         }
 
+        
+        if (Schema::hasColumn('candidates', 'permanent_address')) {
+            $candidateData['permanent_address'] = trim(implode(', ', array_filter([
+                $request->permanent_neighborhood,
+                $request->permanent_bd_thana_name,
+                $request->permanent_bd_district_name,
+                $request->permanent_postcode,
+            ])));
+        }
+        if (Schema::hasColumn('candidates', 'international_address')) {
+            $candidateData['international_address'] = $request->international_address;
+        }
+        
         $candidate->update($candidateData);
 
         // image

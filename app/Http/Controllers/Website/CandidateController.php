@@ -24,6 +24,8 @@ use App\Models\CandidateEducation;
 use App\Services\Website\Candidate\CandidateSettingUpdateService;
 use App\Services\Website\Candidate\DashboardService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Modules\CandidatePlan\Entities\CandidatePlan;
 use Modules\Faq\Entities\Faq;
 
@@ -358,24 +360,50 @@ class CandidateController extends Controller
 
             $instName = EducationInstitution::where('id', $data['education_institution_id'])->value('name');
 
-            $education = CandidateEducation::create([
-                'candidate_id'             => currentCandidate()->id,
+            $educationPayload = [
+                'candidate_id' => currentCandidate()->id,
+            ];
 
-                'exam_name'                => $data['exam_name'],
-                'degree_name'              => $data['degree_name'] ?? null,
-                'major_subject'            => $data['major_subject'] ?? null,
-                'education_institution_id' => $data['education_institution_id'],
-                'institute_name'           => $instName,
-                'passing_year'             => $data['passing_year'] ?? null,
-                'result'                   => $data['result'] ?? null,
-                'board'                    => $data['board'] ?? null,
-                'is_institute_accredited'  => $data['is_institute_accredited'] ?? null,
+            if (Schema::hasColumn('candidate_education', 'exam_name')) {
+                $educationPayload['exam_name'] = $data['exam_name'];
+            }
+            if (Schema::hasColumn('candidate_education', 'degree_name')) {
+                $educationPayload['degree_name'] = $data['degree_name'] ?? null;
+            }
+            if (Schema::hasColumn('candidate_education', 'major_subject')) {
+                $educationPayload['major_subject'] = $data['major_subject'] ?? null;
+            }
+            if (Schema::hasColumn('candidate_education', 'education_institution_id')) {
+                $educationPayload['education_institution_id'] = $data['education_institution_id'];
+            }
+            if (Schema::hasColumn('candidate_education', 'institute_name')) {
+                $educationPayload['institute_name'] = $instName;
+            }
+            if (Schema::hasColumn('candidate_education', 'passing_year')) {
+                $educationPayload['passing_year'] = $data['passing_year'] ?? null;
+            }
+            if (Schema::hasColumn('candidate_education', 'result')) {
+                $educationPayload['result'] = $data['result'] ?? null;
+            }
+            if (Schema::hasColumn('candidate_education', 'board')) {
+                $educationPayload['board'] = $data['board'] ?? null;
+            }
+            if (Schema::hasColumn('candidate_education', 'is_institute_accredited')) {
+                $educationPayload['is_institute_accredited'] = $data['is_institute_accredited'] ?? null;
+            }
 
-                // আপনার পুরনো কলাম থাকলে রাখবেন, না থাকলে remove করবেন
-                'level'                    => $data['exam_name'],
-                'degree'                   => $data['degree_name'] ?? $data['exam_name'],
-                'year'                     => (int)($data['passing_year'] ?? 0),
-            ]);
+            // legacy columns
+            if (Schema::hasColumn('candidate_education', 'level')) {
+                $educationPayload['level'] = $data['exam_name'];
+            }
+            if (Schema::hasColumn('candidate_education', 'degree')) {
+                $educationPayload['degree'] = $data['degree_name'] ?? $data['exam_name'];
+            }
+            if (Schema::hasColumn('candidate_education', 'year')) {
+                $educationPayload['year'] = (int) ($data['passing_year'] ?? 0);
+            }
+
+            $education = CandidateEducation::create($educationPayload);
 
             $education->skills()->sync($data['skills'] ?? []);
 
@@ -410,22 +438,48 @@ class CandidateController extends Controller
 
             $instName = EducationInstitution::where('id', $data['education_institution_id'])->value('name');
 
-            $education->update([
-                'exam_name'                => $data['exam_name'],
-                'degree_name'              => $data['degree_name'] ?? null,
-                'major_subject'            => $data['major_subject'] ?? null,
-                'education_institution_id' => $data['education_institution_id'],
-                'institute_name'           => $instName,
-                'passing_year'             => $data['passing_year'] ?? null,
-                'result'                   => $data['result'] ?? null,
-                'board'                    => $data['board'] ?? null,
-                'is_institute_accredited'  => $data['is_institute_accredited'] ?? null,
+            $educationPayload = [];
 
-                // legacy থাকলে রাখবেন
-                'level'                    => $data['exam_name'],
-                'degree'                   => $data['degree_name'] ?? $data['exam_name'],
-                'year'                     => (int)($data['passing_year'] ?? 0),
-            ]);
+            if (Schema::hasColumn('candidate_education', 'exam_name')) {
+                $educationPayload['exam_name'] = $data['exam_name'];
+            }
+            if (Schema::hasColumn('candidate_education', 'degree_name')) {
+                $educationPayload['degree_name'] = $data['degree_name'] ?? null;
+            }
+            if (Schema::hasColumn('candidate_education', 'major_subject')) {
+                $educationPayload['major_subject'] = $data['major_subject'] ?? null;
+            }
+            if (Schema::hasColumn('candidate_education', 'education_institution_id')) {
+                $educationPayload['education_institution_id'] = $data['education_institution_id'];
+            }
+            if (Schema::hasColumn('candidate_education', 'institute_name')) {
+                $educationPayload['institute_name'] = $instName;
+            }
+            if (Schema::hasColumn('candidate_education', 'passing_year')) {
+                $educationPayload['passing_year'] = $data['passing_year'] ?? null;
+            }
+            if (Schema::hasColumn('candidate_education', 'result')) {
+                $educationPayload['result'] = $data['result'] ?? null;
+            }
+            if (Schema::hasColumn('candidate_education', 'board')) {
+                $educationPayload['board'] = $data['board'] ?? null;
+            }
+            if (Schema::hasColumn('candidate_education', 'is_institute_accredited')) {
+                $educationPayload['is_institute_accredited'] = $data['is_institute_accredited'] ?? null;
+            }
+
+            // legacy columns
+            if (Schema::hasColumn('candidate_education', 'level')) {
+                $educationPayload['level'] = $data['exam_name'];
+            }
+            if (Schema::hasColumn('candidate_education', 'degree')) {
+                $educationPayload['degree'] = $data['degree_name'] ?? $data['exam_name'];
+            }
+            if (Schema::hasColumn('candidate_education', 'year')) {
+                $educationPayload['year'] = (int) ($data['passing_year'] ?? 0);
+            }
+
+            $education->update($educationPayload);
 
             $education->skills()->sync($data['skills'] ?? []);
 
