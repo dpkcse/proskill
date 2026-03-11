@@ -1,12 +1,125 @@
 # Changelog
 
+## 4.20.1
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry Laravel SDK v4.20.1.
+
+### Misc
+
+- Allow newer versions of `symfony/psr-http-message-bridge` dependency [(#1076)](https://github.com/getsentry/sentry-laravel/pull/1076)
+
+## 4.20.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry Laravel SDK v4.20.0.
+
+### Features
+
+- Add support for Sentry metrics. [(#1072)](https://github.com/getsentry/sentry-laravel/pull/1072)
+```php
+// Counter metric
+\Sentry\trace_metrics()->count('test-counter', 10, ['my-attribute' => 'foo']);
+
+// Gauge metric
+\Sentry\trace_metrics()->gauge('test-gauge', 50.0, ['my-attribute' => 'foo'], \Sentry\Unit::millisecond());
+
+// Distribution metric
+\Sentry\trace_metrics()->distribution('test-distribution', 20.0, ['my-attribute' => 'foo'], \Sentry\Unit::kilobyte());
+```
+
+### Misc
+
+- Simplify usage of E_ALL [(#1067)](https://github.com/getsentry/sentry-laravel/pull/1067)
+
+## 4.19.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry Laravel SDK v4.19.0.
+
+### Features
+
+- Add Laravel Pennant feature flags [(#1061)](https://github.com/getsentry/sentry-laravel/pull/1061)
+
+  The SDK will now automatically capture feature flags resolved using [Laravel Pennant](https://laravel.com/docs/12.x/pennant) and attach them to events and spans.
+
+### Bug Fixes
+
+- Do not try to detect the session key on the CLI [(#1058)](https://github.com/getsentry/sentry-laravel/pull/1058)
+
+## 4.18.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry Laravel SDK v4.18.0.
+
+### Bug Fixes
+
+- Ensure we flush logs when the application unexpectedly terminates [(#1052)](https://github.com/getsentry/sentry-laravel/pull/1052)
+
+### Misc
+
+- Use `SENTRY_LOG_LEVEL` environment variable instead of `SENTRY_LOGS_LEVEL` to be more consistent (`SENTRY_LOGS_LEVEL` will keep working as an alias for backward compatibility). [(#1051)](https://github.com/getsentry/sentry-laravel/pull/1051)
+- Bump the PHP SDK to version `4.16.0` [(#1053)](https://github.com/getsentry/sentry-laravel/pull/1053)
+
+## 4.17.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry Laravel SDK v4.17.0.
+
+### Features
+
+- Auto configure Sentry log channels. [(#1042)](https://github.com/getsentry/sentry-laravel/pull/1042)
+
+Configuring the channel is no longer required. To enable logs for Sentry, the following environment variables
+need to be configured:
+```bash
+LOG_CHANNEL=stack
+LOG_STACK=single,sentry_logs
+SENTRY_ENABLE_LOGS=true
+```
+
+Sentry will use `LOG_LEVEL` to determine the minimum log level, but it's possible to overwrite it just for Sentry
+using `SENTRY_LOG_LEVEL`.
+
+```bash
+LOG_LEVEL=info
+SENTRY_LOG_LEVEL=warning
+```
+
+### Misc
+
+- Add `sentry.origin` attribute to `LogsHandler`. [(#1041)](https://github.com/getsentry/sentry-laravel/pull/1041) 
+
+## 4.16.0
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry Laravel SDK v4.16.0.
+
+### Features
+
+- Allow logging exceptions [(#1035)](https://github.com/getsentry/sentry-laravel/pull/1035)
+
+## 4.15.3
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry Laravel SDK v4.15.3.
+
+### Bug Fixes
+
+- Guard against empty cache event keys [(#1031)](https://github.com/getsentry/sentry-laravel/pull/1031)
+
+## 4.15.2
+
+The Sentry SDK team is happy to announce the immediate availability of Sentry Laravel SDK v4.15.2.
+
+### Bug Fixes
+
+- Replace the session key in cache span names by a placeholder [(#1009)](https://github.com/getsentry/sentry-laravel/pull/1009)
+
+### Misc
+
+- Bump the PHP SDK to version `4.15.2` [(#1028)](https://github.com/getsentry/sentry-laravel/pull/1028)
+
 ## 4.15.1
 
 The Sentry SDK team is happy to announce the immediate availability of Sentry Laravel SDK v4.15.1.
 
 ### Misc
 
-- Bum the PHP SDK to version `4.14.1` [(#1013)](https://github.com/getsentry/sentry-laravel/pull/1013)
+- Bump the PHP SDK to version `4.14.1` [(#1013)](https://github.com/getsentry/sentry-laravel/pull/1013)
 
 ## 4.15.0
 

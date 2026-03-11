@@ -280,4 +280,9 @@ class Candidate extends Model
         return $this->hasMany(CandidateResume::class);
 
     }
+
+    public function experienceSkills()
+    {
+        return $this->hasMany(CandidateExperienceSkill::class);
+    }
 }

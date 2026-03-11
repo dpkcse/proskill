@@ -3,6 +3,7 @@
     {{ __('settings') }}
 @endsection
 @section('main')
+
     <div class="dashboard-wrapper">
         <div class="container">
             <div class="row">
@@ -54,6 +55,17 @@
                                         </button>
                                     </li>
 
+                                    {{-- Extracariculler Activities  --}}
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link {{ session('type') == 'extracariculler' ? 'active' : '' }}"
+                                            id="pills-extracariculler-tab" data-bs-toggle="pill"
+                                            data-bs-target="#pills-extracariculler" type="button" role="tab"
+                                            aria-controls="pills-extracariculler" aria-selected="false">
+                                            <x-svg.briefcase-icon />
+                                            {{ __('extra_activities') }}
+                                        </button>
+                                    </li>
+
                                     {{-- Social Setting  --}}
                                     <li class="nav-item" role="presentation">
                                         <button class="nav-link {{ session('type') == 'social' ? 'active' : '' }}"
@@ -93,6 +105,20 @@
                                             <div class="row">
                                                 <div class="col-lg-4">
                                                     <x-website.candidate.photo-section :candidate="$candidate" />
+                                                    <x-website.candidate.signature-section :candidate="$candidate" />
+                                                    <div class="mt-4">
+                                                        <h6 class="resume">{{ __('your_cv_resume') }}</h6>
+                                                        <div class="resume-item add-resume" data-bs-toggle="modal"
+                                                            data-bs-target="#resumeModal">
+                                                            <div class="resume-icon">
+                                                                <x-svg.plus-icon />
+                                                            </div>
+                                                            <div>
+                                                                <h4 class="resume-title">{{ __('add_cv_resume') }}</h4>
+                                                                <h6 class="resume-size">{{ __('browse_file_here_only') }} - pdf</h6>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                                 <div class="row col-lg-8">
                                                     <div class="col-lg-6 mb-3">
@@ -161,15 +187,41 @@
                                                             </div>
                                                         </div>
                                                     </div>
+                                                    <div class="col-6 mb-3">
+                                                        <x-forms.label :required="false" name="nationality"
+                                                            class="pointer body-font-4 d-block text-gray-900 rt-mb-8" />
+
+                                                        <div class="fromGroup">
+                                                            <div class="form-control-icon">
+                                                                <select name="nationality"
+                                                                        class="w-100-p select2-country">
+                                                                    <option value="">{{ __('select_country') ?? 'Select country' }}</option>
+
+                                                                    @foreach ($countries as $country)
+                                                                        <option
+                                                                            value="{{ $country->name }}"
+                                                                            {{ old('nationality', $candidate->nationality) == $country->name ? 'selected' : '' }}>
+                                                                            {{ $country->name }}
+                                                                        </option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
+                                                        </div>
+
+                                                        @error('nationality')
+                                                            <span class="text-danger">{{ $message }}</span>
+                                                        @enderror
+                                                    </div>
+
                                                     @if (setting('candidate_birth_date_active'))
                                                     <div class="col-lg-6 mb-3">
-                                                        <x-forms.label :required="true" name="date_of_birth"
+                                                        <x-forms.label :required="false" name="date_of_birth"
                                                             class="body-font-4 d-block text-gray-900 rt-mb-8" />
                                                         <div class="fromGroup">
                                                             <div
                                                                 class="d-flex align-items-center form-control-icon date datepicker">
                                                                 <input type="text" name="birth_date"
-                                                                    value="{{ $candidate->birth_date ? date('d-m-Y', strtotime($candidate->birth_date)) : old('birth_date') }}"
+                                                                   value="{{ old('birth_date', $candidate->birth_date ? date('d-m-Y', strtotime($candidate->birth_date)) : '') }}"
                                                                     id="date" placeholder="dd/mm/yyyy"
                                                                     class="form-control border-cutom @error('birth_date') is-invalid @enderror" />
                                                                 <span class="input-group-addon input-group-text-custom">
@@ -177,8 +229,138 @@
                                                                 </span>
                                                             </div>
                                                         </div>
+                                                         @error('birth_date')
+                                                            <span class="text-danger">{{ $message }}</span>
+                                                        @enderror
+                                                    </div>
+                                                    <div class="col-lg-6 mb-3">
+                                                        <x-forms.label :required="false" name="age"
+                                                            class="body-font-4 d-block text-gray-900 rt-mb-8" />
+                                                        <x-forms.input type="number" name="age"
+                                                            value="{{ old('age', $candidate->birth_date ? \Carbon\Carbon::parse($candidate->birth_date)->age : '') }}"
+                                                            id="age_basic" placeholder="{{ __('age') }}"
+                                                            min="1" max="100" />
+                                                        <small class="text-muted">{{ __('date_of_birth') }} / {{ __('age') }}</small>
+                                                        @error('age')
+                                                            <span class="text-danger d-block">{{ $message }}</span>
+                                                        @enderror
                                                     </div>
                                                     @endif
+                                                    
+                                        {{-- Contact + BD Address (in Basic form) --}}
+                                        <div class="dashboard-account-setting-item">
+                                            <h6>{{ __('your_contact_information') }}</h6>
+                                            <div class="row">
+                                                <div class="col-lg-6 mb-3">
+                                                    <x-forms.label :required="false" name="phone"
+                                                        class="pointer body-font-4 d-block text-gray-900 rt-mb-8" />
+                                                    <x-forms.input type="text" name="phone"
+                                                        value="{{ $contact->phone ?? '' }}" id="phone_basic"
+                                                        placeholder="{{ __('phone') }}" class="phonecode" />
+                                                </div>
+                                                <div class="col-lg-6 mb-3">
+                                                    <x-forms.label :required="false" name="secondary_phone"
+                                                        class="pointer body-font-4 d-block text-gray-900 rt-mb-8" />
+                                                    <x-forms.input type="text" name="secondary_phone"
+                                                        value="{{ $contact->secondary_phone ?? '' }}" id="phone2_basic"
+                                                        placeholder="{{ __('phone') }}" class="phonecode" />
+                                                </div>
+                                                <div class="col-lg-6 mb-3">
+                                                    <x-forms.label :required="false" name="email"
+                                                        class="pointer body-font-4 d-block text-gray-900 rt-mb-8" />
+                                                    <x-forms.input type="email" name="email"
+                                                        value="{{ $contact->email ?? '' }}" id="email_basic"
+                                                        placeholder="{{ __('email') }}" />
+                                                </div>
+                                                <div class="col-lg-6 mb-3">
+                                                    <x-forms.label :required="false" name="secondary_email"
+                                                        class="pointer body-font-4 d-block text-gray-900 rt-mb-8" />
+                                                    <x-forms.input type="email" name="secondary_email"
+                                                        value="{{ $contact->secondary_email ?? '' }}" id="secondary_email_basic"
+                                                        placeholder="{{ __('email') }}" />
+                                                </div>
+                                                <div class="col-lg-6 mb-3">
+                                                    <x-forms.label :required="false" name="whatsapp_number"
+                                                        class="pointer body-font-4 d-block text-gray-900 rt-mb-8" />
+                                                    <x-forms.input type="text" name="whatsapp_number"
+                                                        value="{{ $contact->whatsapp_number ?? $candidate->whatsapp_number ?? '' }}" id="whatsapp_basic"
+                                                        placeholder="{{ __('whatsapp_number') }}" class="phonecode" />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="dashboard-account-setting-item">
+                                            <h6>{{ __('address') }}</h6>
+                                            <div class="row">
+                                                <div class="col-lg-4 mb-3">
+                                                    <label class="body-font-4 d-block text-gray-900 rt-mb-8">{{ __('district') }}</label>
+                                                        @php
+                                                            $districtValue = old('bd_district_name', $candidate->locality ?: ($candidate->bd_district ?: ($candidate->district ?: '')));
+                                                            $thanaValue = old('bd_thana_name', $candidate->bd_thana ?: ($candidate->place ?: ''));
+                                                        @endphp
+                                                        <select id="bd_district_select" class="rt-selectactive w-100-p" name="bd_district_name">
+                                                            <option value="">{{ __('select_one') }}</option>
+                                                            @if ($districtValue)
+                                                                <option value="{{ $districtValue }}" selected>{{ $districtValue }}</option>
+                                                            @endif
+                                                        </select>
+                                                </div>
+                                                <div class="col-lg-4 mb-3">
+                                                    <label class="body-font-4 d-block text-gray-900 rt-mb-8">{{ __('thana_upazila') }}</label>
+                                                   <select id="bd_thana_select" class="rt-selectactive w-100-p" name="bd_thana_name" {{ $districtValue ? '' : 'disabled' }}>
+                                                           <option value="">{{ __('select_one') }}</option>
+                                                            @if ($thanaValue)
+                                                                <option value="{{ $thanaValue }}" selected>{{ $thanaValue }}</option>
+                                                            @endif
+                                                    </select>
+                                                </div>
+                                                <div class="col-lg-4 mb-3">
+                                                    <x-forms.label :required="false" name="postcode"
+                                                        class="body-font-4 d-block text-gray-900 rt-mb-8" />
+                                                    <x-forms.input type="text" name="postcode"
+                                                        value="{{ old('postcode', $candidate->postcode ?: ($candidate->bd_post_office ?: '')) }}" id="postcode_basic"
+                                                        placeholder="{{ __('postcode') }}" />
+                                                </div>
+                                                <div class="col-lg-12 mb-3">
+                                                    <label class="body-font-4 d-block text-gray-900 rt-mb-8">{{ __('house_no_road_village') }}</label>
+                                                    <input type="text" name="neighborhood" class="form-control"
+                                                        value="{{ old('neighborhood', $candidate->neighborhood ?: ($candidate->house_road_village ?: '')) }}"
+                                                        placeholder="Type House No. / Road / Village">
+                                                </div>
+                                            </div>
+                                            <p class="small text-muted m-0">{{ __('district_thana_saved_in_candidate_location_fields') }}</p>
+                                        </div>
+
+                                        {{-- Account settings (in Basic form) --}}
+                                        <div class="dashboard-account-setting-item pb-0">
+                                            <h6>{{ __('account_settings') }}</h6>
+                                            <div class="row">
+                                                <div class="col-lg-6 mb-3">
+                                                    <x-forms.label :required="false" name="account_email"
+                                                        class="body-font-4 d-block text-gray-900 rt-mb-8" />
+                                                    <x-forms.input type="email" name="account_email"
+                                                        value="{{ old('account_email', auth()->user()->email) }}" id="account_email_basic"
+                                                        placeholder="{{ __('email') }}" />
+                                                </div>
+
+                                                <div class="col-lg-6 mb-3">
+                                                    <x-forms.label :required="false" name="new_password"
+                                                        class="body-font-4 d-block text-gray-900 rt-mb-8" />
+                                                    <x-forms.input type="password" name="password"
+                                                        value="" id="password_basic"
+                                                        placeholder="{{ __('new_password') }}" />
+                                                </div>
+
+                                                <div class="col-lg-6 mb-3">
+                                                    <x-forms.label :required="false" name="confirm_password"
+                                                        class="body-font-4 d-block text-gray-900 rt-mb-8" />
+                                                    <x-forms.input type="password" name="password_confirmation"
+                                                        value="" id="password_confirmation_basic"
+                                                        placeholder="{{ __('confirm_password') }}" />
+                                                </div>
+                                            </div>
+                                        </div>
+
                                                     <div class="col-lg-12 mt-4">
                                                         <button type="submit" class="btn btn-primary">
                                                             {{ __('save_changes') }}
@@ -441,12 +623,117 @@
                                             </ul>
                                         </div>
                                     @endif
-                                    <x-website.candidate.tab.candidate-experience-setting-tab :experiences="$candidate->experiences" />
+                                    <x-website.candidate.tab.candidate-experience-setting-tab :experiences="$candidate->experiences" :jobCategories="$job_categories" :skills="$skills" :experienceSkills="$candidate->experienceSkills" />
                                     <br>
                                     <x-website.candidate.tab.candidate-education-setting-tab :educations="$candidate->educations" />
                                 </div>
 
-                                {{-- Social Setting  --}}
+                               
+
+                                {{-- Extracariculler Activities  --}}
+                                <div class="tab-pane fade {{ session('type') == 'extracariculler' ? 'show active' : '' }}"
+                                    id="pills-extracariculler" role="tabpanel" aria-labelledby="pills-extracariculler-tab">
+                                    <div class="dashboard-account-setting-item">
+                                        <form action="{{ route('candidate.settingUpdate') }}" method="POST">
+                                            @csrf
+                                            @method('put')
+                                            <input type="hidden" name="type" value="extracariculer">
+                                            <div class="row">
+                                                @forelse($extracurriculars as $extracurricular)
+                                                    <div class="col-12 custom-select-padding">
+                                                        <div class="d-flex tw-items-center">
+                                                            <div class="d-flex mborder">
+                                                                <div class="w-100">
+                                                                    <input class="border-0" type="text" name="extracariculer[]"
+                                                                        id=""
+                                                                        placeholder="{{ __('extracariculer') }}..."
+                                                                        value="{{ $extracurricular->activities }}">
+                                                                </div>
+                                                            </div>
+                                                            <div class="tw-ms-2">
+                                                                <button
+                                                                    class="tw-w-12 tw-h-12 tw-border-0 tw-rounded tw-bg-[#F1F2F4] tw-inline-flex tw-justify-center tw-items-center"
+                                                                    type="button" id="remove_item">
+                                                                    <svg width="24" height="24"
+                                                                        viewBox="0 0 24 24" fill="none"
+                                                                        xmlns="http://www.w3.org/2000/svg">
+                                                                        <path
+                                                                            d="M12 21C16.9706 21 21 16.9706 21 12C21 7.02944 16.9706 3 12 3C7.02944 3 3 7.02944 3 12C3 16.9706 7.02944 21 12 21Z"
+                                                                            stroke="#18191C" stroke-width="1.5"
+                                                                            stroke-miterlimit="10" />
+                                                                        <path d="M15 9L9 15" stroke="#18191C"
+                                                                            stroke-width="1.5" stroke-linecap="round"
+                                                                            stroke-linejoin="round" />
+                                                                        <path d="M15 15L9 9" stroke="#18191C"
+                                                                            stroke-width="1.5" stroke-linecap="round"
+                                                                            stroke-linejoin="round" />
+                                                                    </svg>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @empty
+                                                    <div class="col-12 custom-select-padding">
+                                                        <div class="d-flex tw-items-center">
+                                                            <div class="d-flex mborder">
+                                                                <div class="w-100">
+                                                                    <input class="border-0" type="text" name="extracariculer[]"
+                                                                        id=""
+                                                                        placeholder="{{ __('extracariculer') }}...">
+                                                                </div>
+                                                            </div>
+                                                            <div class="tw-ms-2">
+                                                                <button
+                                                                    class="tw-w-12 tw-h-12 tw-border-0 tw-rounded tw-bg-[#F1F2F4] tw-inline-flex tw-justify-center tw-items-center"
+                                                                    type="button" id="remove_item">
+                                                                    <svg width="24" height="24"
+                                                                        viewBox="0 0 24 24" fill="none"
+                                                                        xmlns="http://www.w3.org/2000/svg">
+                                                                        <path
+                                                                            d="M12 21C16.9706 21 21 16.9706 21 12C21 7.02944 16.9706 3 12 3C7.02944 3 3 7.02944 3 12C3 16.9706 7.02944 21 12 21Z"
+                                                                            stroke="#18191C" stroke-width="1.5"
+                                                                            stroke-miterlimit="10" />
+                                                                        <path d="M15 9L9 15" stroke="#18191C"
+                                                                            stroke-width="1.5" stroke-linecap="round"
+                                                                            stroke-linejoin="round" />
+                                                                        <path d="M15 15L9 9" stroke="#18191C"
+                                                                            stroke-width="1.5" stroke-linecap="round"
+                                                                            stroke-linejoin="round" />
+                                                                    </svg>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @endforelse
+                                                <div id="multiple_feature_part">
+                                                </div>
+                                                <div class="col-12">
+                                                    <button class="btn tw-bg-[#F1F2F4] w-100 mt-4 add-new-social"
+                                                        onclick="add_new_extracariculer()" type="button">
+                                                        <svg width="20" height="20" viewBox="0 0 20 20"
+                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <path
+                                                                d="M10 17.5C14.1421 17.5 17.5 14.1421 17.5 10C17.5 5.85786 14.1421 2.5 10 2.5C5.85786 2.5 2.5 5.85786 2.5 10C2.5 14.1421 5.85786 17.5 10 17.5Z"
+                                                                stroke="#18191C" stroke-width="1.5"
+                                                                stroke-miterlimit="10" />
+                                                            <path d="M6.875 10H13.125" stroke="#18191C" stroke-width="1.5"
+                                                                stroke-linecap="round" stroke-linejoin="round" />
+                                                            <path d="M10 6.875V13.125" stroke="#18191C" stroke-width="1.5"
+                                                                stroke-linecap="round" stroke-linejoin="round" />
+                                                        </svg>
+                                                        <span>{{ __('add_new_extracariculer') }}</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary mt-4">
+                                                {{ __('save_changes') }}
+                                            </button>
+                                    </div>
+
+                                    </form>
+                                </div>
+
+                                 {{-- Social Setting  --}}
                                 <div class="tab-pane fade {{ session('type') == 'social' ? 'show active' : '' }}"
                                     id="pills-social" role="tabpanel" aria-labelledby="pills-social-tab">
                                     <div class="dashboard-account-setting-item">
@@ -1117,55 +1404,97 @@
         aria-hidden="true" data-bs-keyboard="false">
         <div class="modal-dialog">
             <div class="modal-content">
-                <form action="{{ route('candidate.educations.store') }}" method="POST">
-                    @csrf
-                    <div class="modal-body">
-                        <h5 class="modal-title rt-mb-18 f-size-18" id="cvModalLabel">{{ __('add_education') }}</h5>
-                        <div class="from-group rt-mb-18">
-                            <x-forms.label name="education_level" class="rt-mb-8" />
-                            <input type="text" name="level" required class="@error('level') is-invalid @enderror"
-                                placeholder="{{ __('enter') }} {{ __('education_level') }}">
-                            @error('level')
-                                <span class="error invalid-feedback">{{ $message }}</span>
-                            @enderror
-                        </div>
-                        <div class="row rt-mb-18">
-                            <div class="col-lg-6">
-                                <x-forms.label name="degree" class="rt-mb-8" />
-                                <input type="text" name="degree" required
-                                    class="@error('degree') is-invalid @enderror"
-                                    placeholder="{{ __('enter') }} {{ __('degree') }}">
-                                @error('degree')
-                                    <span class="error invalid-feedback">{{ $message }}</span>
-                                @enderror
-                            </div>
-                            <div class="col-lg-6">
-                                <x-forms.label name="year" class="rt-mb-8" />
-                                <input type="text" name="year" value="{{ old('year') }}" placeholder="{{ __('year') }}"
-                                    class="year_picker form-control border-cutom @error('year') is-invalid @enderror">
-                            </div>
-                        </div>
-                        <div class="row rt-mb-18">
-                            <div class="col-lg-12">
-                                <x-forms.label name="notes" class="rt-mb-8" :required="false" />
-                                <textarea class="form-control @error('notes') is-invalid @enderror"
-                                    placeholder="{{ __('enter') }} {{ __('notes') }}" name="notes" rows="5"></textarea>
-                            </div>
-                        </div>
-                        <div class="d-flex tw-flex-wrap tw-gap-4 justify-content-between">
-                            <button type="button" class="bg-priamry-50 btn btn-primary-50"
-                                onclick="closeAddEducationModal()">{{ __('cancel') }}</button>
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <span class="button-content-wrapper ">
-                                    <span class="button-icon align-icon-right"><i class="ph-arrow-right"></i></span>
-                                    <span class="button-text">
-                                        {{ __('add_education') }}
-                                    </span>
-                                </span>
-                            </button>
+                <form action="{{ route('candidate.educations.store') }}" style="padding:20px" method="POST">
+                @csrf
+
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        <label class="body-font-4 d-block text-gray-900 rt-mb-8">
+                            Do you have institutional accreditation?
+                        </label>
+                        <div class="d-flex gap-3">
+                            <label><input type="radio" name="is_institute_accredited" value="1"> Yes</label>
+                            <label><input type="radio" name="is_institute_accredited" value="0"> No</label>
                         </div>
                     </div>
+                    <div class="col-lg-6 mb-3">
+                    <x-forms.label name="exam_name" class="rt-mb-8" />
+                    <select name="exam_name" class="select2-taggable edu-modal-select w-100-p" required>
+                        <option value="">{{ __('select_one') }}</option>
+                        <option>PSC / 5 pass</option>
+                        <option>JSC/JDC/8 pass</option>
+                        <option>Secondary</option>
+                        <option>Higher Secondary</option>
+                        <option>Diploma</option>
+                        <option>Bachelor/Honors</option>
+                        <option>Masters</option>
+                        <option>PhD (Doctor of Philosophy)</option>
+                    </select>
+                    </div>
+
+                    <div class="col-lg-6 mb-3">
+                        <x-forms.label name="degree_name" class="rt-mb-8" />
+                        <select name="degree_name" class="select2-taggable edu-modal-select w-100-p">
+                            <option value="">{{ __('select_one') }}</option>
+                            <option>Master of Science (MSc)</option>
+                            <option>Master of Business Administration (MBA)</option>
+                            <option>...</option>
+                        </select>
+                    </div>
+
+                    <div class="col-lg-6 mb-3">
+                    <x-forms.label name="major_subject" class="rt-mb-8" />
+                    <input type="text" name="major_subject" class="form-control" placeholder="Science / Arts / Commerce / Major">
+                    </div>
+
+                    <div class="col-lg-6 mb-3">
+                        <x-forms.label name="institute_name" class="rt-mb-8" />
+                        <select name="education_institution_id" class="select2-taggable edu-modal-select w-100-p" required>
+                            <option value="">{{ __('select_one') }}</option>
+
+                            @foreach($institutions as $inst)
+                                <option value="{{ $inst->id }}"
+                                    {{ (string) old('education_institution_id') === (string) $inst->id ? 'selected' : '' }}>
+                                    {{ $inst->name }}
+                                </option>
+                            @endforeach
+                        </select>
+
+                    </div>
+
+                    <div class="col-lg-4 mb-3">
+                    <x-forms.label name="passing_year" class="rt-mb-8" />
+                    <input type="text" name="passing_year" class="form-control" placeholder="2020">
+                    </div>
+
+                    <div class="col-lg-4 mb-3">
+                    <x-forms.label name="result" class="rt-mb-8" />
+                    <input type="text" name="result" class="form-control" placeholder="GPA/CGPA/Grade">
+                    </div>
+
+                    <div class="col-lg-4 mb-3">
+                    <x-forms.label name="board" class="rt-mb-8" />
+                    <input type="text" name="board" class="form-control" placeholder="Dhaka / Rajshahi ...">
+                    </div>
+
+                    <div class="col-12 mb-3">
+                        <x-forms.label name="skills" class="rt-mb-8" />
+
+                        <select name="skills[]" class="select2-taggable edu-modal-select w-100-p" multiple>
+                            @foreach($skills as $skill)
+                                <option value="{{ $skill->id }}"
+                                    {{ in_array($skill->id, old('skills', [])) ? 'selected' : '' }}>
+                                    {{ $skill->name }}
+                                </option>
+                            @endforeach
+                        </select>
+
+                    </div>
+                </div>
+
+                <button class="btn btn-primary">{{ __('add_education') }}</button>
                 </form>
+
                 <button type="button" class="btn-close" onclick="closeAddEducationModal()">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
                         xmlns="http://www.w3.org/2000/svg">
@@ -1180,60 +1509,118 @@
     </div>
 
 
-    {{-- Edit Eduction Modal --}}
+    {{-- Edit Education Modal (NEW) --}}
     <div class="modal fade" id="editEducationModal" tabindex="-1" aria-labelledby="exampleModalLabel"
         aria-hidden="true" data-bs-keyboard="false">
         <div class="modal-dialog">
             <div class="modal-content">
-                <form action="{{ route('candidate.educations.update') }}" method="POST">
+                <form action="{{ route('candidate.educations.update') }}" style="padding:20px" method="POST">
                     @csrf
                     @method('PUT')
-                    <div class="modal-body">
-                        <h5 class="modal-title rt-mb-18 f-size-18" id="cvModalLabel">{{ __('edit_education') }}</h5>
-                        <input type="hidden" name="education_id" id="education-modal-id">
-                        <div class="from-group rt-mb-18">
-                            <x-forms.label name="education_level" class="rt-mb-8" />
-                            <input id="education-modal-level" type="text" name="level" required
-                                placeholder="{{ __('enter') }} {{ __('education_level') }}">
-                        </div>
-                        <div class="row rt-mb-18">
-                            <div class="col-lg-6">
-                                <x-forms.label name="degree" class="rt-mb-8" />
-                                <input id="education-modal-degree" type="text" name="degree" required
-                                    placeholder="{{ __('enter') }} {{ __('degree') }}">
-                                @error('degree')
-                                    <span class="error invalid-feedback">{{ $message }}</span>
-                                @enderror
-                            </div>
-                            <div class="col-lg-6">
-                                <x-forms.label name="year" class="rt-mb-8" />
-                                <input id="education-modal-year" type="text" name="year"
-                                    value="{{ old('year') }}" placeholder="{{ __('dd-mm-yyyy') }}"
-                                    class="year_picker form-control border-cutom @error('year') is-invalid @enderror"
-                                    required>
+
+                    <input type="hidden" name="education_id" id="education-modal-id">
+
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <label class="body-font-4 d-block text-gray-900 rt-mb-8">
+                                Do you have institutional accreditation?
+                            </label>
+                            <div class="d-flex gap-3">
+                                <label>
+                                    <input type="radio" name="is_institute_accredited" id="edu-accredit-yes" value="1">
+                                    Yes
+                                </label>
+                                <label>
+                                    <input type="radio" name="is_institute_accredited" id="edu-accredit-no" value="0">
+                                    No
+                                </label>
                             </div>
                         </div>
-                        <div class="row rt-mb-18">
-                            <div class="col-lg-12">
-                                <x-forms.label name="notes" class="rt-mb-8" :required="false" />
-                                <textarea id="education-notes" class="form-control @error('notes') is-invalid @enderror"
-                                    placeholder="{{ __('enter') }} {{ __('notes') }}" name="notes" rows="5"></textarea>
-                            </div>
+
+                        <div class="col-lg-6 mb-3">
+                            <x-forms.label name="exam_name" class="rt-mb-8" />
+                            <select name="exam_name" id="education-modal-exam" class="select2-taggable edu-modal-select w-100-p" required>
+                                <option value="">{{ __('select_one') }}</option>
+                                <option>PSC / 5 pass</option>
+                                <option>JSC/JDC/8 pass</option>
+                                <option>Secondary</option>
+                                <option>Higher Secondary</option>
+                                <option>Diploma</option>
+                                <option>Bachelor/Honors</option>
+                                <option>Masters</option>
+                                <option>PhD (Doctor of Philosophy)</option>
+                            </select>
                         </div>
-                        <div class="d-flex tw-flex-wrap tw-gap-4 justify-content-between">
-                            <button type="button" class="bg-priamry-50 btn btn-primary-50"
-                                onclick="closeEditEducationModal()">{{ __('cancel') }}</button>
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <span class="button-content-wrapper ">
-                                    <span class="button-icon align-icon-right"><i class="ph-arrow-right"></i></span>
-                                    <span class="button-text">
-                                        {{ __('update_education') }}
-                                    </span>
-                                </span>
-                            </button>
+
+                        <div class="col-lg-6 mb-3">
+                            <x-forms.label name="degree_name" class="rt-mb-8" />
+                            <select name="degree_name" id="education-modal-degree-name" class="select2-taggable edu-modal-select w-100-p">
+                                <option value="">{{ __('select_one') }}</option>
+                                <option>Master of Science (MSc)</option>
+                                <option>Master of Business Administration (MBA)</option>
+                                <option>...</option>
+                            </select>
+                        </div>
+
+                        <div class="col-lg-6 mb-3">
+                            <x-forms.label name="major_subject" class="rt-mb-8" />
+                            <input type="text" name="major_subject" id="education-modal-major"
+                                class="form-control"
+                                placeholder="Science / Arts / Commerce / Major">
+                        </div>
+
+                        <div class="col-lg-6 mb-3">
+                            <x-forms.label name="institute_name" class="rt-mb-8" />
+                            <select name="education_institution_id" id="education-modal-inst"
+                                    class="select2-taggable edu-modal-select w-100-p" required>
+                                <option value="">{{ __('select_one') }}</option>
+                                @foreach($institutions as $inst)
+                                    <option value="{{ $inst->id }}">{{ $inst->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="col-lg-4 mb-3">
+                            <x-forms.label name="passing_year" class="rt-mb-8" />
+                            <input type="text" name="passing_year" id="education-modal-year"
+                                class="year_picker form-control" placeholder="2020">
+                        </div>
+
+                        <div class="col-lg-4 mb-3">
+                            <x-forms.label name="result" class="rt-mb-8" />
+                            <input type="text" name="result" id="education-modal-result"
+                                class="form-control" placeholder="GPA/CGPA/Grade">
+                        </div>
+
+                        <div class="col-lg-4 mb-3">
+                            <x-forms.label name="board" class="rt-mb-8" />
+                            <input type="text" name="board" id="education-modal-board"
+                                class="form-control" placeholder="Dhaka / Rajshahi ...">
+                        </div>
+
+                        <div class="col-12 mb-3">
+                            <x-forms.label name="skills" class="rt-mb-8" />
+                            <select name="skills[]" id="education-modal-skills"
+                                    class="select2-taggable edu-modal-select w-100-p" multiple>
+                                @foreach($skills as $skill)
+                                    <option value="{{ $skill->id }}">{{ $skill->name }}</option>
+                                @endforeach
+                            </select>
                         </div>
                     </div>
+
+                    <div class="d-flex tw-flex-wrap tw-gap-4 justify-content-between">
+                        <button type="button" class="bg-priamry-50 btn btn-primary-50"
+                            onclick="closeEditEducationModal()">{{ __('cancel') }}</button>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <span class="button-content-wrapper ">
+                                <span class="button-icon align-icon-right"><i class="ph-arrow-right"></i></span>
+                                <span class="button-text">{{ __('update_education') }}</span>
+                            </span>
+                        </button>
+                    </div>
                 </form>
+
                 <button type="button" class="btn-close" onclick="closeEditEducationModal()">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
                         xmlns="http://www.w3.org/2000/svg">
@@ -1246,6 +1633,7 @@
             </div>
         </div>
     </div>
+
 
     {{-- Add Experience Modal --}}
     <div class="modal fade" id="addExperienceModal" tabindex="-1" aria-labelledby="exampleModalLabel"
@@ -1449,24 +1837,226 @@
         .has-badge-cutom {
             top: 34% !important;
         }
-    </style>
 
-
-    <style>
         .mymap {
             border-radius: 12px;
             z-index: 999;
         }
+
+        /* শুধুমাত্র signature অংশের জন্য override */
+        .signature-upload .profile-file-upload-content,
+        .signature-upload .profile-file-upload-content2 {
+            max-width: 300px;
+        }
+
+        /* ইমেজকে 300x80 করে দিচ্ছি */
+        .signature-upload .profile-file-upload-image {
+            width: 300px !important;
+            height: 80px !important;
+            object-fit: contain; /* চাইলে cover দিলে crop হবে */
+            display: block;
+        }
+
+        /* delete বাটন যেন দেখা যায় */
+        .signature-upload .image-title-wrap {
+            display: flex;
+            justify-content: center;
+            margin-top: 4px;
+        }
+
+        .profile-file-upload-image {
+            height: 300px !important;
+            max-height: 300px !important;
+        }
+
+        /* Education modal Select2 dropdown should appear over modal */
+        #addEducationModal .select2-container,
+        #editEducationModal .select2-container {
+            width: 100% !important;
+            z-index: 2055;
+        }
+
+        #addEducationModal .select2-container--open,
+        #editEducationModal .select2-container--open,
+        #addEducationModal .select2-dropdown,
+        #editEducationModal .select2-dropdown {
+            z-index: 2060 !important;
+        }
+
+
     </style>
+
+
 @endsection
 
 @section('frontend_scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const ageInput = document.getElementById('age_basic');
+            const birthDateInput = document.getElementById('date');
+            if (!ageInput || !birthDateInput) return;
+
+            ageInput.addEventListener('input', function () {
+                if (ageInput.value && birthDateInput.value) {
+                    birthDateInput.value = '';
+                }
+            });
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            const districtEl = document.getElementById('bd_district_select');
+            const thanaEl = document.getElementById('bd_thana_select');
+            if (!districtEl || !thanaEl) return;
+
+            const currentDistrict = @json(old('bd_district_name', $candidate->locality ?: ($candidate->bd_district ?: ($candidate->district ?: ''))));
+            const currentThana = @json(old('bd_thana_name', $candidate->bd_thana ?: ($candidate->place ?: '')));
+
+            let districts = [];
+            let thanaByDistrict = {};
+
+            function isSelect2(el){
+                return (window.jQuery && jQuery(el).data('select2'));
+            }
+            function refreshSelect2(el){
+                if (isSelect2(el)) {
+                    jQuery(el).trigger('change.select2');
+                }
+            }
+            const normalize = (val) => String(val || '').trim().toLowerCase();
+            
+            function setOptions(selectEl, options, selectedValue = '') {
+                // reset
+                selectEl.innerHTML = '';
+                const def = document.createElement('option');
+                def.value = '';
+                def.textContent = "{{ __('select_one') }}";
+                selectEl.appendChild(def);
+                const selectedNormalized = normalize(selectedValue);
+                const frag = document.createDocumentFragment();
+                options.forEach(({value, text, data={}}) => {
+                    const opt = document.createElement('option');
+                    opt.value = value;
+                    opt.textContent = text;
+                    Object.keys(data).forEach(k => opt.dataset[k] = data[k]);
+                    if (selectedNormalized && normalize(value) === selectedNormalized) opt.selected = true;
+                    frag.appendChild(opt);
+                });
+                selectEl.appendChild(frag);
+                refreshSelect2(selectEl);
+            }
+
+            function fillThanasByDistrictId(districtId, selectedThana = '') {
+                thanaEl.disabled = true;
+                const list = thanaByDistrict[String(districtId)] || [];
+                const opts = list.map(t => ({value: t.name, text: t.name}));
+                setOptions(thanaEl, opts, selectedThana);
+                
+                const selectedNormalized = normalize(selectedThana);
+                const hasSelected = selectedNormalized && [...thanaEl.options].some(o => normalize(o.value) === selectedNormalized);
+                if (selectedThana && !hasSelected) {
+                    const opt = document.createElement('option');
+                    opt.value = selectedThana;
+                    opt.textContent = selectedThana;
+                    opt.selected = true;
+                    thanaEl.appendChild(opt);
+                }
+
+                
+                thanaEl.disabled = false;
+                if (isSelect2(thanaEl)) jQuery(thanaEl).prop('disabled', false);
+                refreshSelect2(thanaEl);
+            }
+
+            function getSelectedDistrictId() {
+                const opt = districtEl.options[districtEl.selectedIndex];
+                return opt ? (opt.dataset.districtId || '') : '';
+            }
+
+            try {
+                const dRes = await fetch("{{ asset('frontend/assets/json/bd_districts.json') }}", { cache: "no-store" });
+                const tRes = await fetch("{{ asset('frontend/assets/json/bd_thana_by_district.json') }}", { cache: "no-store" });
+
+                const dJson = await dRes.json();
+                const tJson = await tRes.json();
+
+                districts = Array.isArray(dJson) ? dJson : (dJson.districts || []);
+                thanaByDistrict = (tJson.thanas_by_district || tJson) || {};
+
+                // Fill districts (value = name; keep id in data)
+                const districtOpts = districts.map(d => ({
+                    value: d.name,
+                    text: d.name,
+                    data: { districtId: d.id }
+                }));
+                setOptions(districtEl, districtOpts, currentDistrict);
+
+                // If currentDistrict exists, load thanas
+                if (currentDistrict) {
+                    const selectedOpt = [...districtEl.options].find(o => normalize(o.value) === normalize(currentDistrict));
+                    const districtId = selectedOpt ? selectedOpt.dataset.districtId : '';
+                    if (districtId) {
+                        fillThanasByDistrictId(districtId, currentThana || '');
+                    }
+                }
+
+                // Native change
+                districtEl.addEventListener('change', function () {
+                    const districtId = getSelectedDistrictId();
+                    // reset thana
+                    setOptions(thanaEl, [], '');
+                    thanaEl.disabled = true;
+                    if (!districtId) return;
+                    fillThanasByDistrictId(districtId, '');
+                });
+
+                // Select2 change
+                if (isSelect2(districtEl)) {
+                    jQuery(districtEl).on('select2:select', function () {
+                        const districtId = getSelectedDistrictId();
+                        setOptions(thanaEl, [], '');
+                        thanaEl.disabled = true;
+                        if (!districtId) return;
+                        fillThanasByDistrictId(districtId, '');
+                    });
+                }
+            } catch (e) {
+                console.error('BD district/thana JSON load failed', e);
+            }
+        });
+    </script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             $('.select21').select2();
         })
     </script>
     @stack('js')
+     <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            function initEducationModalSelect2(modalSelector) {
+                const $modal = $(modalSelector);
+                const $selects = $modal.find('.edu-modal-select');
+                $selects.each(function () {
+                    const $el = $(this);
+                    if ($el.hasClass('select2-hidden-accessible')) {
+                        $el.select2('destroy');
+                    }
+                    $el.select2({
+                        width: '100%',
+                        dropdownParent: $modal
+                    });
+                });
+            }
+
+            $('#addEducationModal').on('shown.bs.modal', function () {
+                initEducationModalSelect2('#addEducationModal');
+            });
+
+            $('#editEducationModal').on('shown.bs.modal', function () {
+                initEducationModalSelect2('#editEducationModal');
+            });
+        });
+    </script>
     <script>
         //init datepicker
         $("#available_id_date").attr("autocomplete", "off");
@@ -1549,7 +2139,8 @@
             $('.resume-file-upload-input').val('');
         })
 
-        function resumeManageReadURL(input, type) {
+       function resumeManageReadURL(input, type) {
+            // উপরের অংশ: ফাইলের নাম, সাইজ, টাইপ – আগের মতোই
             if (type == 'add') {
                 var fileName = document.querySelector('#resume_add_input').files[0].name;
                 var fileSize = document.querySelector('#resume_add_input').files[0].size / 1024 / 1024;
@@ -1559,51 +2150,103 @@
                 var fileSize = document.querySelector('#resume_edit_input').files[0].size / 1024 / 1024;
                 var fileType = document.querySelector('#resume_edit_input').files[0].type;
             }
+
             $('.resume_selected_file_name').html(fileName);
             $('.resume_selected_file_size').html(fileSize.toFixed(4));
             $('.resume_selected_file_type').html(fileType);
+
+            // ইমেজ / ফাইল preview
             if (input.files && input.files[0]) {
-                console.log(input.className)
                 var reader = new FileReader();
-                reader.onload = function(e) {
-                    if (input.className === 'profile-file-upload-input') {
-                        $('.profile-image-upload-wrap').hide();
-                        $('.profile-file-upload-image').attr('src', e.target.result);
-                        $('.profile-file-upload-content').show();
-                        // $('.image-title').html(input.files[0].name);
+
+                reader.onload = function (e) {
+                    // ১) প্রোফাইল ফটো (photo-uploadMode)
+                    if ($(input).closest('#photo-uploadMode').length) {
+                        var $wrap = $('#photo-uploadMode');
+                        $wrap.find('.profile-image-upload-wrap').hide();
+                        $wrap.find('.profile-file-upload-image').attr('src', e.target.result);
+                        $wrap.find('.profile-file-upload-content').show();
                     }
+
+                    // ২) সিগনেচার (signature-uploadMode)
+                    if ($(input).closest('#signature-uploadMode').length) {
+                        var $wrap = $('#signature-uploadMode');
+                        $wrap.find('.profile-image-upload-wrap').hide();
+                        $wrap.find('.profile-file-upload-image').attr('src', e.target.result);
+                        $wrap.find('.profile-file-upload-content').show();
+                    }
+
+                    // ৩) ব্যানার
                     if (input.className === 'banner-file-upload-input') {
                         $('.banner-image-upload-wrap').hide();
                         $('.banner-file-upload-image').attr('src', e.target.result);
                         $('.banner-file-upload-content').show();
-                        // $('.image-title').html(input.files[0].name);
                     }
+
+                    // ৪) রিজিউম (CV) preview
                     if (input.className === 'resume-file-upload-input') {
                         $('.cv-image-upload-wrap').hide();
                         $('.resume-file-upload-content.none').show();
                     }
                 };
+
                 reader.readAsDataURL(input.files[0]);
             } else {
-                $('.profile-remove-image').on('click', function() {
-                    // console.log(this.className)
-                    $('.profile-file-upload-input').replaceWith($('.profile-file-upload-input').clone());
-                    $('.profile-file-upload-content').hide();
-                    $('.profile-file-upload-image').attr('src', '');
-                    $('.profile-image-upload-wrap').show();
-                })
-                $('.banner-remove-image').on('click', function() {
-                    // console.log(this.className)
+                // প্রোফাইল ফটো রিমুভ
+                $('.profile-remove-image').off('click').on('click', function () {
+                    var $wrap = $('#photo-uploadMode');
+                    $wrap.find('.profile-file-upload-input').val('');
+                    $wrap.find('.profile-file-upload-content').hide();
+                    $wrap.find('.profile-file-upload-image').attr('src', '');
+                    $wrap.find('.profile-image-upload-wrap').show();
+                });
+
+                // সিগনেচার রিমুভ
+                $('.signature-remove-image').off('click').on('click', function () {
+                    var $wrap = $('#signature-uploadMode');
+                    $wrap.find('.profile-file-upload-input').val('');
+                    $wrap.find('.profile-file-upload-content').hide();
+                    $wrap.find('.profile-file-upload-image').attr('src', '');
+                    $wrap.find('.profile-image-upload-wrap').show();
+
+                    // চাইলে এখানে hidden input ইত্যাদি reset করতে পারো
+                    // যেমন:
+                    // $('#existing_signature').val('');
+                });
+
+                // ব্যানার রিমুভ
+                $('.banner-remove-image').off('click').on('click', function () {
                     $('.banner-file-upload-input').replaceWith($('.banner-file-upload-input').clone());
                     $('.banner-file-upload-content').hide();
                     $('.banner-file-upload-image').attr('src', '');
                     $('.banner-image-upload-wrap').show();
-                })
+                });
             }
         }
+        
         setTimeout(function() {
             {{ session()->forget('type') }}
-        }, 10000);
+        }, 10000);        
+        
+        $(document).on('click', '.signature-remove-image', function (e) {
+            e.preventDefault();
+
+            // পুরোনো signature থাকলে first oldMode hide করব
+            $('#signature-oldMode').addClass('d-none');
+
+            // নতুন আপলোড মোড দেখাবো
+            const $upload = $('#signature-uploadMode');
+            $upload.removeClass('d-none');
+
+            // ইনপুট reset
+            $upload.find('.profile-file-upload-input').val('');
+            // ইমেজ reset
+            $upload.find('.profile-file-upload-image').attr('src', '#');
+            // preview hide, drag-text দেখাও
+            $upload.find('.profile-file-upload-content').hide();
+            $upload.find('.profile-image-upload-wrap').show();
+        });
+
     </script>
 
     @include('map::set-edit-' . $setting->default_map. 'map', ['lat' => $candidate->lat, 'long' => $candidate->long])
@@ -1658,12 +2301,57 @@
             </div>
         </div>
     `);
-    $(".rt-selectactive-2").select2({ // minimumResultsForSearch: Infinity,
-});
+        $(".rt-selectactive-2").select2({ // minimumResultsForSearch: Infinity,
+    }); 
+    }
+
+        function add_new_extracariculer() {
+            $("#multiple_feature_part").append(`
+                <div class="col-12 custom-select-padding">
+                    <div class="d-flex tw-items-center">
+                        <div class="d-flex mborder">
+                            <div class="w-100">
+                                <input class="border-0" type="text" name="extracariculer[]"
+                                    id=""
+                                    placeholder="{{ __('extracariculer') }}...">
+                            </div>
+                        </div>
+                        <div class="tw-ms-2">
+                            <button
+                                class="tw-w-12 tw-h-12 tw-border-0 tw-rounded tw-bg-[#F1F2F4] tw-inline-flex tw-justify-center tw-items-center"
+                                type="button" id="remove_item">
+                                <svg width="24" height="24"
+                                    viewBox="0 0 24 24" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                        d="M12 21C16.9706 21 21 16.9706 21 12C21 7.02944 16.9706 3 12 3C7.02944 3 3 7.02944 3 12C3 16.9706 7.02944 21 12 21Z"
+                                        stroke="#18191C" stroke-width="1.5"
+                                        stroke-miterlimit="10" />
+                                    <path d="M15 9L9 15" stroke="#18191C"
+                                        stroke-width="1.5" stroke-linecap="round"
+                                        stroke-linejoin="round" />
+                                    <path d="M15 15L9 9" stroke="#18191C"
+                                        stroke-width="1.5" stroke-linecap="round"
+                                        stroke-linejoin="round" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `);
+            $(".rt-selectactive-2").select2({ // minimumResultsForSearch: Infinity,
+            });
         }
 
         $(document).on("click", "#remove_item", function() {
             $(this).parent().parent().parent('div').remove();
+        });
+        $(function () {
+            $('.select2-country').select2({
+                placeholder: "{{ __('select_country') ?? 'Select country' }}",
+                allowClear: true,
+                width: '100%'
+            });
         });
     </script>
 @endsection

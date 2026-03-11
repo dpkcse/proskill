@@ -16,6 +16,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Schema;
 use Modules\Language\Entities\Language;
 
 class CandidateSettingUpdateService
@@ -35,7 +36,31 @@ class CandidateSettingUpdateService
 
         if ($request->type == 'basic') {
             $this->candidateBasicInfoUpdate($request, $user, $candidate);
-            $candidate->update(['profile_complete' => $candidate->profile_complete != 0 ? $candidate->profile_complete - 25 : 0]);
+            $this->contactUpdate($request, $candidate);
+
+            if ($request->filled('account_email') && $request->account_email !== $user->email) {
+                $request->validate([
+                    'account_email' => 'required|email|unique:users,email,'.$user->id,
+                ]);
+
+                $user->update([
+                    'email' => $request->account_email,
+                ]);
+                Mail::to($validated['account_email'])->send(new SendEmailUpdateVerification($user, $validated['account_email']));
+                session()->put('requested_email', $validated['account_email']);
+            }
+
+            if ($request->filled('password') || $request->filled('password_confirmation')) {
+                $request->validate([
+                    'password' => 'required|confirmed|min:6',
+                    'password_confirmation' => 'required',
+                ]);
+
+                $user->update([
+                    'password' => bcrypt($request->password),
+                ]);
+            }
+            $candidate->update(['profile_complete' => $candidate->profile_complete != 0 ? $candidate->profile_complete - 20 : 0]);
             flashSuccess(__('profile_updated'));
 
             return back();
@@ -43,7 +68,7 @@ class CandidateSettingUpdateService
 
         if ($request->type == 'profile') {
             $this->candidateProfileInfoUpdate($request, $candidate);
-            $candidate->update(['profile_complete' => $candidate->profile_complete != 0 ? $candidate->profile_complete - 25 : 0]);
+            $candidate->update(['profile_complete' => $candidate->profile_complete != 0 ? $candidate->profile_complete - 20 : 0]);
             flashSuccess(__('profile_updated'));
 
             return back();
@@ -51,7 +76,15 @@ class CandidateSettingUpdateService
 
         if ($request->type == 'social') {
             $this->socialUpdate($request);
-            $candidate->update(['profile_complete' => $candidate->profile_complete != 0 ? $candidate->profile_complete - 25 : 0]);
+            $candidate->update(['profile_complete' => $candidate->profile_complete != 0 ? $candidate->profile_complete - 20 : 0]);
+            flashSuccess(__('profile_updated'));
+
+            return back();
+        }
+
+        if ($request->type == 'extracariculer') {
+            $this->extracariculerUpdate($request);
+            $candidate->update(['profile_complete' => $candidate->profile_complete != 0 ? $candidate->profile_complete - 20 : 0]);
             flashSuccess(__('profile_updated'));
 
             return back();
@@ -59,11 +92,24 @@ class CandidateSettingUpdateService
 
         if ($request->type == 'contact') {
             $this->contactUpdate($request, $candidate);
-            $candidate->update(['profile_complete' => $candidate->profile_complete != 0 ? $candidate->profile_complete - 25 : 0]);
+            $candidate->update(['profile_complete' => $candidate->profile_complete != 0 ? $candidate->profile_complete - 20 : 0]);
             flashSuccess(__('profile_updated'));
 
             return back();
         }
+
+        if ($request->type == 'experience_skill') {
+            $this->experienceSkillAdd($request, $candidate);
+            flashSuccess(__('profile_updated'));
+            return back();
+        }
+
+        if ($request->type == 'experience_skill_delete') {
+            $this->experienceSkillDelete($request, $candidate);
+            flashSuccess(__('profile_updated'));
+            return back();
+        }
+
 
         if ($request->type == 'account') {
 
@@ -110,12 +156,14 @@ class CandidateSettingUpdateService
     {
         $rules = [
             'name' => 'required',
-            'birth_date' => 'required',
+            'birth_date' => 'nullable|required_without:age',
+            'age' => 'nullable|integer|min:1|max:100|required_without:birth_date',
             'education' => 'required',
             'experience' => 'required',
+            'nationality' => 'required',
         ];
         if (! setting('candidate_birth_date_active')) {
-            unset($rules['birth_date']);
+            unset($rules['birth_date'], $rules['age']);
         }
         $request->validate($rules);
         $user->update(['name' => $request->name]);
@@ -136,32 +184,90 @@ class CandidateSettingUpdateService
             $education = Education::create(['name' => $education_request]);
         }
 
-        if ($request->birth_date) {
+        if ($request->filled('age')) {
+            $date = Carbon::now()->subYears((int) $request->age)->startOfDay()->format('Y-m-d H:i:s');
+        } elseif ($request->birth_date) {
             $dateTime = Carbon::parse($request->birth_date);
             $date = $request['birth_date'] = $dateTime->format('Y-m-d H:i:s');
         }
 
-        $candidate->update([
+        $candidateData = [
             'title' => $request->title,
             'experience_id' => $experience->id,
             'education_id' => $education->id,
             'website' => $request->website,
             'birth_date' => $date ?? null,
-        ]);
+            'nationality' => $request->nationality,
+        ];
+
+        if (Schema::hasColumn('candidates', 'locality')) {
+            $candidateData['locality'] = $request->bd_district_name;
+        }
+        if (Schema::hasColumn('candidates', 'district')) {
+            $candidateData['district'] = $request->bd_district_name;
+        }
+        if (Schema::hasColumn('candidates', 'place')) {
+            $candidateData['place'] = $request->bd_thana_name;
+        }
+        if (Schema::hasColumn('candidates', 'neighborhood')) {
+            $candidateData['neighborhood'] = $request->neighborhood;
+        }
+        if (Schema::hasColumn('candidates', 'postcode')) {
+            $candidateData['postcode'] = $request->postcode;
+        }
+
+        if (Schema::hasColumn('candidates', 'bd_district')) {
+            $candidateData['bd_district'] = $request->bd_district_name;
+        }
+        if (Schema::hasColumn('candidates', 'bd_thana')) {
+            $candidateData['bd_thana'] = $request->bd_thana_name;
+        }
+        if (Schema::hasColumn('candidates', 'house_road_village')) {
+            $candidateData['house_road_village'] = $request->neighborhood;
+        }
+        if (Schema::hasColumn('candidates', 'bd_post_office')) {
+            $candidateData['bd_post_office'] = $request->postcode;
+        }
+
+        $candidate->update($candidateData);
 
         // image
-        if ($request->image) {
+        // image (Candidate photo) - 300x300
+        // Candidate photo (300x300)
+         if ($request->hasFile('image')) {
             $request->validate([
-                'image' => 'image|mimes:jpeg,png,jpg',
+                'image' => 'image|mimes:jpeg,png,jpg|max:5120',
             ]);
 
-            deleteImage($candidate->photo);
+            // পুরোনো ফটো থাকলে ডিলিট
+            deleteImage($candidate->getRawOriginal('photo')); // অথবা accessor ফিক্স করলে সরাসরি $candidate->photo
 
-            $path = 'uploads/images/candidates';
-            $image = uploadImage($request->image, $path, [164, 164]);
+            $path  = 'uploads/images/candidates';
+            $image = uploadImage($request->file('image'), $path, [300, 300]);
 
             $candidate->update([
-                'photo' => $image,
+                'photo' => $image, // DB-তে শুধু path স্টোর হচ্ছে
+            ]);
+        }
+        
+        
+        /**
+         * Signature image - 300x80
+         */
+        if ($request->hasFile('signature')) {
+            $request->validate([
+                'signature' => 'image|mimes:jpeg,png,jpg|max:5120', // 5MB
+            ]);
+
+            // আগের signature থাকলে ডিলিট করি
+            deleteImage($candidate->signature);
+
+            // আলাদা ফোল্ডার চাইলে:
+            $signaturePath  = 'uploads/images/candidates';
+            $signatureImage = uploadImage($request->file('signature'), $signaturePath, [300, 80]);
+
+            $candidate->update([
+                'signature' => $signatureImage,
             ]);
         }
         // cv
@@ -286,6 +392,7 @@ class CandidateSettingUpdateService
                 'phone' => $request->phone,
                 'secondary_phone' => $request->secondary_phone,
                 'email' => $request->email,
+                'whatsapp_number' => $request->whatsapp_number,
                 'secondary_email' => $request->secondary_email,
             ]);
         } else {
@@ -298,12 +405,53 @@ class CandidateSettingUpdateService
             ]);
         }
 
-        if (! empty($request->whatsapp_number)) {
-            $candidate->update(['whatsapp_number' => $request->whatsapp_number]);
-        }
+        $candidate->update([
+            'whatsapp_number' => $request->whatsapp_number,
+        ]);
 
         // Location
+        // updateMap($candidate);
+        // if ($request->filled('country') || $request->filled('address') || $request->filled('exact_location') || $request->filled('lat') || $request->filled('long')) {
+        //     $candidate->update([
+        //         'country' => $request->country ?? $candidate->country,
+        //         'address' => $request->address ?? $candidate->address,
+        //         'exact_location' => $request->exact_location ?? $candidate->exact_location,
+        //         'lat' => $request->lat ?? $candidate->lat,
+        //         'long' => $request->long ?? $candidate->long,
+        //     ]);
+        // }
+        // Location
         updateMap(auth()->user()->candidate);
+        // Location: update map data from Contact or Basic settings flow when payload exists.
+        // This keeps Basic-tab contact flow compatible without wiping address fields on empty payload.
+        if (in_array($request->type, ['contact', 'basic'], true)) {
+            $location = session('location');
+            $hasLocationPayload = is_array($location) && count(array_filter([
+                $location['region'] ?? null,
+                $location['district'] ?? null,
+                $location['exact_location'] ?? null,
+                $location['neighborhood'] ?? null,
+                $location['postcode'] ?? null,
+                $location['lat'] ?? null,
+                $location['lng'] ?? null,
+            ]));
+
+            $hasSelectedLocation = count(array_filter([
+                session('selectedCountryId'),
+                session('selectedStateId'),
+                session('selectedCityId'),
+                session('selectedCountryLat'),
+                session('selectedCountryLong'),
+                session('selectedStateLat'),
+                session('selectedStateLong'),
+                session('selectedCityLat'),
+                session('selectedCityLong'),
+            ]));
+
+            if ($hasLocationPayload || $hasSelectedLocation) {
+                updateMap(auth()->user()->candidate);
+            }
+        }
 
         return true;
     }
@@ -372,6 +520,30 @@ class CandidateSettingUpdateService
         return true;
     }
 
+        /**
+     * Candidate extrac ariculer Update
+     * *
+     * @param  \Illuminate\Http\Request  $request
+     * @return bool
+     */
+    public function extracariculerUpdate($request){
+        $user = User::find(auth()->id());
+
+        $user->extracurricularInfo()->delete();
+        $extracariculers = $request->extracariculer;
+
+        if ($extracariculers) {
+            foreach ($extracariculers as $key => $value) {
+                if ($value && $extracariculers[$key]) {
+                    $user->extracurricularInfo()->create([
+                        'activities' => $value,
+                    ]);
+                }
+            }
+        }
+
+        return true;
+    }
     /**
      * Candidate visibility setting update
      *
@@ -461,4 +633,47 @@ class CandidateSettingUpdateService
 
         return true;
     }
+    /**
+     * Add candidate experience skill (category + skill + learned sources)
+     */
+    protected function experienceSkillAdd($request, $candidate)
+    {
+        $request->validate([
+            'experience_skill_category_id' => 'required|exists:job_categories,id',
+            'experience_skill_id' => 'required|exists:skills,id',
+            'learned_from' => 'nullable|array',
+            'learned_from.*' => 'in:self,job,educational,professional_training,ntvqf',
+        ]);
+
+        $learned = $request->learned_from ?? [];
+
+        // Prevent duplicates (same candidate + category + skill)
+        $candidate->experienceSkills()->updateOrCreate(
+            [
+                'job_category_id' => $request->experience_skill_category_id,
+                'skill_id' => $request->experience_skill_id,
+            ],
+            [
+                'learned_from' => $learned,
+            ]
+        );
+
+        return true;
+    }
+
+    /**
+     * Delete candidate experience skill row
+     */
+    protected function experienceSkillDelete($request, $candidate)
+    {
+        $request->validate([
+            'experience_skill_row_id' => 'required|integer',
+        ]);
+
+        $candidate->experienceSkills()->where('id', $request->experience_skill_row_id)->delete();
+
+        return true;
+    }
+
+
 }

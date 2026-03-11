@@ -104,53 +104,76 @@
 
     //image upload scripts
     function readURL(input) {
-        if (input.files && input.files[0]) {
-            var reader = new FileReader();
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
 
-            reader.onload = function(e) {
-                if (input.className === 'profile-file-upload-input') {
-                    $('.profile-image-upload-wrap').hide();
-                    $('.profile-file-upload-image').attr('src', e.target.result);
-                    $('.profile-file-upload-content').show();
+        reader.onload = function (e) {
+            // 🔹 Photo + Signature (দু’টাতেই class একই: profile-file-upload-input)
+            if ($(input).hasClass('profile-file-upload-input')) {
 
-                    // $('.image-title').html(input.files[0].name);
+                // যদি signature সেকশনের ভেতর থেকে আসে
+                if ($(input).closest('#signature-uploadMode').length) {
+                    var $wrap = $('#signature-uploadMode');
+
+                    $wrap.find('.profile-image-upload-wrap').hide();
+                    $wrap.find('.profile-file-upload-image').attr('src', e.target.result);
+                    $wrap.find('.profile-file-upload-content').show();
+
+                // না হলে এটা প্রোফাইল photo ধরে নেওয়া হবে
+                } else {
+                    var $wrap = $('#photo-uploadMode').length
+                        ? $('#photo-uploadMode')
+                        : $(document); // ফালব্যাক
+
+                    $wrap.find('.profile-image-upload-wrap').hide();
+                    $wrap.find('.profile-file-upload-image').attr('src', e.target.result);
+                    $wrap.find('.profile-file-upload-content').show();
                 }
-                if (input.className === 'banner-file-upload-input') {
-                    $('.banner-image-upload-wrap').hide();
+            }
 
-                    $('.banner-file-upload-image').attr('src', e.target.result);
-                    $('.banner-file-upload-content').show();
+            // 🔹 Banner
+            if ($(input).hasClass('banner-file-upload-input')) {
+                $('.banner-image-upload-wrap').hide();
+                $('.banner-file-upload-image').attr('src', e.target.result);
+                $('.banner-file-upload-content').show();
+            }
 
-                    // $('.image-title').html(input.files[0].name);
-                }
-                if (input.className === 'resume-file-upload-input') {
-                    $('.cv-image-upload-wrap').hide();
-                    $('.resume-file-upload-content.none').show();
-                }
-            };
+            // 🔹 Resume / CV
+            if ($(input).hasClass('resume-file-upload-input')) {
+                $('.cv-image-upload-wrap').hide();
+                $('.resume-file-upload-content.none').show();
+            }
+        };
 
-            reader.readAsDataURL(input.files[0]);
+        reader.readAsDataURL(input.files[0]);
 
-        } else {
-            $('.profile-remove-image').on('click', function() {
-                $('.profile-file-upload-input').replaceWith($('.profile-file-upload-input').clone());
-                $('.profile-file-upload-content').hide();
-                $('.profile-file-upload-image').attr('src', '');
-                $('.profile-image-upload-wrap').show();
-            })
-            $('.banner-remove-image').on('click', function() {
-                $('.banner-file-upload-input').replaceWith($('.banner-file-upload-input').clone());
-                $('.banner-file-upload-content').hide();
-                $('.banner-file-upload-image').attr('src', '');
-                $('.banner-image-upload-wrap').show();
-            })
-        }
     }
-    $('.profile-remove-image').on('click', function() {
-        $('.profile-file-upload-input').replaceWith($('.profile-file-upload-input').clone());
-        $('.profile-file-upload-content').hide();
-        $('.profile-image-upload-wrap').show();
-    })
+}
+
+    // 🔁 আগের global clone কোডটা মুছে ফেলো
+    // $('.profile-remove-image').on('click', function() {
+    //     $('.profile-file-upload-input').replaceWith($('.profile-file-upload-input').clone());
+    //     $('.profile-file-upload-content').hide();
+    //     $('.profile-image-upload-wrap').show();
+    // })
+
+    // ✅ নতুন, সেফ হ্যান্ডলার
+    $(document).on('click', '.profile-remove-image', function (e) {
+        e.preventDefault();
+
+        // photo / signature – যে সেকশনের ভিতরে ক্লিক হয়েছে, শুধু ওইটা reset করব
+        const $wrap  = $(this).closest('#photo-uploadMode, #photo-oldMode, #signature-uploadMode, #signature-oldMode');
+
+        const $input = $wrap.find('.profile-file-upload-input');
+
+        // ফাইল ইনপুট reset
+        $input.val('');
+
+        // preview hide করে আবার upload-box দেখাই
+        $wrap.find('.profile-file-upload-content').hide();
+        $wrap.find('.profile-image-upload-wrap').show();
+    });
+
     $('.banner-remove-image').on('click', function() {
         $('.banner-file-upload-input').replaceWith($('.banner-file-upload-input').clone());
         $('.banner-file-upload-content').hide();

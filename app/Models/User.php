@@ -113,6 +113,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(SocialLink::class, 'user_id');
     }
 
+    public function extracurricularInfo(): HasMany
+    {
+        return $this->hasMany(ExtraCurricular::class, 'user_id');
+    }
+
     public function comments()
     {
         return $this->hasMany(PostComment::class, 'author_id', 'id');
