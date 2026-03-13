@@ -1960,11 +1960,25 @@
             const currentThana = @json(old('bd_thana_name', $candidate->bd_thana ?: ($candidate->place ?: '')));
 
             const permanentExisting = document.getElementById('permanent_address_existing')?.value || '';
-            const permanentParts = permanentExisting ? permanentExisting.split(',').map(v => v.trim()) : [];
-            const currentPermanentNeighborhood = @json(old('permanent_neighborhood')) || (permanentParts[0] || '');
-            const currentPermanentThana = @json(old('permanent_bd_thana_name')) || (permanentParts[1] || '');
-            const currentPermanentDistrict = @json(old('permanent_bd_district_name')) || (permanentParts[2] || '');
-            const currentPermanentPostcode = @json(old('permanent_postcode')) || (permanentParts[3] || '');
+            const permanentParts = permanentExisting
+                ? permanentExisting.split(',').map(v => v.trim()).filter(Boolean)
+                : [];
+            const parsedPermanentPostcode = permanentParts.length ? permanentParts[permanentParts.length - 1] : '';
+            const parsedPermanentDistrict = permanentParts.length > 1 ? permanentParts[permanentParts.length - 2] : '';
+            const parsedPermanentThana = permanentParts.length > 2 ? permanentParts[permanentParts.length - 3] : '';
+            const parsedPermanentNeighborhood = permanentParts.length > 3
+                ? permanentParts.slice(0, permanentParts.length - 3).join(', ')
+                : (permanentParts[0] || '');
+
+            const currentPermanentNeighborhood = @json(old('permanent_neighborhood')) || parsedPermanentNeighborhood;
+            const currentPermanentThana = @json(old('permanent_bd_thana_name')) || parsedPermanentThana;
+            const currentPermanentDistrict = @json(old('permanent_bd_district_name')) || parsedPermanentDistrict;
+            const currentPermanentPostcode = @json(old('permanent_postcode')) || parsedPermanentPostcode;
+
+            const permanentNeighborhoodEl = document.querySelector('input[name="permanent_neighborhood"]');
+            if (permanentNeighborhoodEl && !permanentNeighborhoodEl.value && currentPermanentNeighborhood) {
+                permanentNeighborhoodEl.value = currentPermanentNeighborhood;
+            }
 
             const permanentPostcodeEl = document.getElementById('permanent_postcode_basic');
             if (permanentPostcodeEl && !permanentPostcodeEl.value && currentPermanentPostcode) {
